@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import {
-  SERVICIOS, ZONAS_DEFAULT, EXTRAS, NIVELES,
+  SERVICIOS, EXTRAS, NIVELES,
   TipoReforma, Zona, Habitaciones,
   calcularM2Habitaciones,
 } from "../data/services";
+import { useConfig } from "../context/ConfigContext";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -30,6 +31,7 @@ const fmt = (n: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
 
 export default function Calculator() {
+  const { config } = useConfig();
   const [state, setState] = useState<State>({
     step: 1,
     servicio: null,
@@ -42,6 +44,20 @@ export default function Calculator() {
 
   const update = (patch: Partial<State>) => setState((s) => ({ ...s, ...patch }));
 
+  const serviciosDisponibles = SERVICIOS.filter((s) => config.serviciosActivos.includes(s.id));
+  const zonasDisponibles = config.zonas;
+  const getPrecioServicio = (s: TipoReforma, nivel: "basico" | "estandar" | "premium") => {
+    const custom = config.preciosCustom[s.id];
+    if (custom) return custom[nivel];
+    return nivel === "basico" ? s.precioBasico : nivel === "estandar" ? s.precioEstandar : s.precioPremium;
+  };
+  const getPrecioExtra = (eId: string, nivel: "basico" | "estandar" | "premium") => {
+    const extra = EXTRAS.find((e) => e.id === eId)!;
+    const custom = config.preciosExtrasCustom[eId];
+    if (custom) return custom[nivel];
+    return nivel === "basico" ? extra.precioBasico : nivel === "estandar" ? extra.precioEstandar : extra.precioPremium;
+  };
+
   const getMetros = (): number => {
     if (!state.servicio) return 0;
     if (state.servicio.unidad === "habitaciones") return calcularM2Habitaciones(state.habitaciones);
@@ -52,14 +68,14 @@ export default function Calculator() {
     if (!state.servicio || !state.zona) return { base: 0, extras: 0, total: 0, min: 0, max: 0, desglosado: [] };
 
     const s = state.servicio;
-    const precioBase = nivelId === "basico" ? s.precioBasico : nivelId === "estandar" ? s.precioEstandar : s.precioPremium;
+    const precioBase = getPrecioServicio(s, nivelId);
     const m2 = getMetros();
     const base = s.unidad === "fijo" ? precioBase : precioBase * m2;
     const baseConZona = base * state.zona.multiplicador;
 
-    const extrasSeleccionados = EXTRAS.filter((e) => state.extrasIds.includes(e.id));
+    const extrasSeleccionados = EXTRAS.filter((e) => state.extrasIds.includes(e.id) && config.extrasActivos.includes(e.id));
     const extrasTotal = extrasSeleccionados.reduce((sum, e) => {
-      const p = nivelId === "basico" ? e.precioBasico : nivelId === "estandar" ? e.precioEstandar : e.precioPremium;
+      const p = getPrecioExtra(e.id, nivelId);
       return sum + (e.unidad === "m2" ? p * m2 : p);
     }, 0);
 
@@ -71,7 +87,7 @@ export default function Calculator() {
       { concepto: "Materiales", importe: baseConZona * 0.38 },
       { concepto: "Gestión y varios", importe: baseConZona * 0.07 },
       ...extrasSeleccionados.map((e) => {
-        const p = nivelId === "basico" ? e.precioBasico : nivelId === "estandar" ? e.precioEstandar : e.precioPremium;
+        const p = getPrecioExtra(e.id, nivelId);
         return { concepto: e.nombre, importe: e.unidad === "m2" ? p * m2 : p };
       }),
     ];
@@ -99,7 +115,7 @@ export default function Calculator() {
   };
 
   const extrasDisponibles = state.servicio
-    ? EXTRAS.filter((e) => state.servicio!.extrasAplicables.includes(e.id))
+    ? EXTRAS.filter((e) => state.servicio!.extrasAplicables.includes(e.id) && config.extrasActivos.includes(e.id))
     : [];
 
   const toggleExtra = (id: string) =>
@@ -148,7 +164,7 @@ export default function Calculator() {
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
             <h2 className="font-semibold text-slate-700 mb-4">¿Qué quieres reformar?</h2>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {SERVICIOS.map((s) => (
+              {serviciosDisponibles.map((s) => (
                 <button
                   key={s.id}
                   onClick={() => update({ servicio: s, extrasIds: [] })}
@@ -172,7 +188,7 @@ export default function Calculator() {
             <h2 className="font-semibold text-slate-700 mb-1">¿En qué zona está el inmueble?</h2>
             <p className="text-xs text-slate-400 mb-4">La ubicación influye en los precios de mano de obra y materiales</p>
             <div className="flex flex-col gap-3">
-              {ZONAS_DEFAULT.map((z) => (
+              {zonasDisponibles.map((z) => (
                 <button
                   key={z.id}
                   onClick={() => update({ zona: z })}
@@ -363,8 +379,15 @@ export default function Calculator() {
             {/* CTA */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
               <h3 className="font-semibold text-slate-800 mb-1">¿Te interesa? Pide tu presupuesto gratuito</h3>
-              <p className="text-sm text-slate-500 mb-4">Te contactamos en menos de 24 horas con un presupuesto detallado sin compromiso.</p>
-              <button className="w-full bg-orange-400 hover:bg-orange-500 text-white font-semibold py-3 rounded-xl transition-colors">
+              <p className="text-sm text-slate-500 mb-2">Te contactamos en menos de 24 horas con un presupuesto detallado sin compromiso.</p>
+              {(config.contactTelefono || config.contactEmail) && (
+                <p className="text-xs text-slate-400 mb-4">
+                  {config.contactTelefono && <span>📞 {config.contactTelefono}</span>}
+                  {config.contactTelefono && config.contactEmail && " · "}
+                  {config.contactEmail && <span>✉️ {config.contactEmail}</span>}
+                </p>
+              )}
+              <button className="w-full text-white font-semibold py-3 rounded-xl transition-opacity hover:opacity-90" style={{ backgroundColor: config.colorPrimario }}>
                 Solicitar presupuesto gratuito →
               </button>
             </div>
