@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useConfig } from "../../context/ConfigContext";
 
-const card = { backgroundColor: "#111111", border: "1px solid #1a1a1a" };
+const card = { backgroundColor: "#101e35", border: "1px solid #1a2e4a" };
 const inputStyle = { backgroundColor: "#0f0f0f", border: "1px solid #1e1e1e", color: "#f1f5f9" };
 
 export default function IntegracionesAdmin() {
@@ -58,7 +58,7 @@ export default function IntegracionesAdmin() {
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto">
       <div className="mb-6 pt-2">
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Integraciones</h1>
+        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Integraciones</h1>
         <p className="text-sm mt-0.5" style={{ color: "#4a4a4a" }}>Conecta tu calculadora con tus herramientas de ventas</p>
       </div>
 

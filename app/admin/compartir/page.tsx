@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useConfig, toSlug } from "../../context/ConfigContext";
 
-const card = { backgroundColor: "#111111", border: "1px solid #1a1a1a" };
+const card = { backgroundColor: "#101e35", border: "1px solid #1a2e4a" };
 
 export default function CompartirAdmin() {
   const { config, updateConfig } = useConfig();
@@ -39,7 +39,7 @@ export default function CompartirAdmin() {
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto">
       <div className="mb-6 pt-2">
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Compartir calculadora</h1>
+        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Compartir calculadora</h1>
         <p className="text-sm mt-0.5" style={{ color: "#4a4a4a" }}>Comparte tu calculadora o incrústala en tu web</p>
       </div>
 

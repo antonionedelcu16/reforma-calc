@@ -11,7 +11,7 @@ const BOTONES: { valor: EstiloBoton; label: string }[] = [
   { valor: "rounded-lg", label: "Suave" },
   { valor: "rounded-md", label: "Cuadrado" },
 ];
-const card = { backgroundColor: "#111111", border: "1px solid #1a1a1a" };
+const card = { backgroundColor: "#101e35", border: "1px solid #1a2e4a" };
 const inputStyle = { backgroundColor: "#0f0f0f", border: "1px solid #1e1e1e", color: "#f1f5f9" };
 
 export default function AparienciaAdmin() {

@@ -7,7 +7,7 @@ import { COMUNIDADES } from "../../data/regiones";
 
 type Tab = "regiones" | "custom";
 const ZONA_VACIA: Omit<Zona, "id"> = { nombre: "", multiplicador: 1.0 };
-const card = { backgroundColor: "#111111", border: "1px solid #1a1a1a" };
+const card = { backgroundColor: "#101e35", border: "1px solid #1a2e4a" };
 
 export default function ZonasAdmin() {
   const { config, updateConfig } = useConfig();
@@ -46,7 +46,7 @@ export default function ZonasAdmin() {
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto">
       <div className="mb-6 pt-2">
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Zonas de trabajo</h1>
+        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Zonas de trabajo</h1>
         <p className="text-sm mt-0.5" style={{ color: "#4a4a4a" }}>Define dónde operas y ajusta los precios por zona</p>
       </div>
 
@@ -58,7 +58,7 @@ export default function ZonasAdmin() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-2xl mb-6" style={{ backgroundColor: "#111111", border: "1px solid #1a1a1a" }}>
+      <div className="flex gap-1 p-1 rounded-2xl mb-6" style={{ backgroundColor: "#101e35", border: "1px solid #1a2e4a" }}>
         {([["regiones", "🗺️ Comunidades autónomas"], ["custom", "⚙️ Zonas propias"]] as [Tab, string][]).map(([t, label]) => (
           <button key={t} onClick={() => setTab(t)}
             className="flex-1 px-3 py-2 rounded-xl text-sm font-bold transition-all"

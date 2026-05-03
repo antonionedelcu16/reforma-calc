@@ -1,0 +1,18 @@
+<svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="shield" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3b7cf5"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
+    </linearGradient>
+  </defs>
+  <!-- Shield shape -->
+  <path d="M28 4 L48 12 V28 C48 40 28 52 28 52 C28 52 8 40 8 28 V12 L28 4Z" fill="url(#shield)"/>
+  <!-- Roof/house top -->
+  <path d="M20 24 L28 17 L36 24" stroke="white" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- V wings -->
+  <path d="M16 26 L28 36 L40 26" stroke="white" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Hammer handle -->
+  <rect x="26" y="27" width="4" height="11" fill="white" rx="1.5"/>
+  <!-- Hammer head -->
+  <rect x="21.5" y="24.5" width="13" height="5" fill="white" rx="2"/>
+</svg>

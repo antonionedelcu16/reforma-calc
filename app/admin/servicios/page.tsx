@@ -5,7 +5,7 @@ import { useConfig } from "../../context/ConfigContext";
 import { SERVICIOS, EXTRAS } from "../../data/services";
 
 type Tab = "servicios" | "extras";
-const card = { backgroundColor: "#111111", border: "1px solid #1a1a1a" };
+const card = { backgroundColor: "#101e35", border: "1px solid #1a2e4a" };
 
 export default function ServiciosAdmin() {
   const { config, updateConfig } = useConfig();
@@ -152,12 +152,12 @@ export default function ServiciosAdmin() {
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto">
       <div className="mb-6 pt-2">
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Servicios y precios</h1>
+        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Servicios y precios</h1>
         <p className="text-sm mt-0.5" style={{ color: "#4a4a4a" }}>Activa los servicios que ofreces y personaliza sus precios</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-2xl w-fit mb-6" style={{ backgroundColor: "#111111", border: "1px solid #1a1a1a" }}>
+      <div className="flex gap-1 p-1 rounded-2xl w-fit mb-6" style={{ backgroundColor: "#101e35", border: "1px solid #1a2e4a" }}>
         {(["servicios", "extras"] as Tab[]).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className="px-5 py-2 rounded-xl text-sm font-bold transition-all"

@@ -14,7 +14,7 @@ type Lead = {
   mensaje?: string;
 };
 
-const card = { backgroundColor: "#111111", border: "1px solid #1a1a1a" };
+const card = { backgroundColor: "#101e35", border: "1px solid #1a2e4a" };
 
 export default function LeadsAdmin() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -61,7 +61,7 @@ export default function LeadsAdmin() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6 pt-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Leads</h1>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Leads</h1>
           <p className="text-sm mt-0.5" style={{ color: "#4a4a4a" }}>
             <span style={{ color: "#fb923c" }}>{leads.length}</span> solicitudes de presupuesto
           </p>
