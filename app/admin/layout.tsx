@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", icono: "📊" },
+  { href: "/admin/leads", label: "Leads", icono: "👥" },
   { href: "/admin/servicios", label: "Servicios y precios", icono: "🔧" },
   { href: "/admin/zonas", label: "Zonas", icono: "📍" },
   { href: "/admin/apariencia", label: "Apariencia", icono: "🎨" },
+  { href: "/admin/integraciones", label: "Integraciones", icono: "⚡" },
   { href: "/admin/compartir", label: "Compartir / Embed", icono: "🔗" },
 ];
 

@@ -489,16 +489,17 @@ export default function Calculator() {
       {mostrarFormulario && state.servicio && zona && (
         <FormularioContacto
           onCerrar={() => setMostrarFormulario(false)}
+          servicio={state.servicio.nombre}
+          zona={zona.nombre}
+          presupuestoBasico={`${fmt(calcular("basico").min)} – ${fmt(calcular("basico").max)}`}
+          presupuestoEstandar={`${fmt(calcular("estandar").min)} – ${fmt(calcular("estandar").max)}`}
+          presupuestoPremium={`${fmt(calcular("premium").min)} – ${fmt(calcular("premium").max)}`}
           resumenTexto={`${state.servicio.nombre} · ${zona.nombre}${state.servicio.unidad !== "fijo" ? ` · ${getM2()} m²` : ""}`}
           resumenHtml={`
             <strong>Servicio:</strong> ${state.servicio.nombre}<br/>
             <strong>Zona:</strong> ${zona.nombre}<br/>
             ${state.servicio.unidad !== "fijo" ? `<strong>Superficie:</strong> ${getM2()} m²<br/>` : ""}
             ${state.extrasIds.length > 0 ? `<strong>Extras:</strong> ${state.extrasIds.join(", ")}<br/>` : ""}
-            <br/>
-            <strong>Básico:</strong> ${fmt(calcular("basico").min)} – ${fmt(calcular("basico").max)}<br/>
-            <strong>Estándar:</strong> ${fmt(calcular("estandar").min)} – ${fmt(calcular("estandar").max)}<br/>
-            <strong>Premium:</strong> ${fmt(calcular("premium").min)} – ${fmt(calcular("premium").max)}
           `}
         />
       )}
