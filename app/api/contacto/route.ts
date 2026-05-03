@@ -1,8 +1,6 @@
 import { Resend } from "resend";
 import { NextRequest, NextResponse } from "next/server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 type LeadPayload = {
   nombre: string;
   email: string;
@@ -26,6 +24,7 @@ type LeadPayload = {
 };
 
 async function enviarEmail(data: LeadPayload) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   const waLink = data.empresaTelefono
     ? `https://wa.me/${data.empresaTelefono.replace(/\s+/g, "")}?text=${encodeURIComponent(`Hola, tengo una consulta de reforma de ${data.nombre}`)}`
     : null;
