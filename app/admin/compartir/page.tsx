@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useConfig, toSlug } from "../../context/ConfigContext";
 
+const card = { backgroundColor: "#111111", border: "1px solid #1a1a1a" };
+
 export default function CompartirAdmin() {
   const { config, updateConfig } = useConfig();
   const [copiado, setCopiado] = useState<string | null>(null);
@@ -26,119 +28,120 @@ export default function CompartirAdmin() {
     setEditandoSlug(false);
   };
 
+  const plataformas = [
+    { nombre: "WordPress", icono: "🔵", pasos: "Edita la página → Bloque «HTML personalizado» → Pega el código" },
+    { nombre: "Wix", icono: "⚫", pasos: "Editor → Añadir → Embed → HTML personalizado" },
+    { nombre: "Squarespace", icono: "🟤", pasos: "Editar sección → + → Embed → Pega el código" },
+    { nombre: "Webflow", icono: "🔷", pasos: "Añade elemento «Embed» → Pega el código" },
+    { nombre: "HTML puro", icono: "🟠", pasos: "Pega el código donde quieras en tu archivo .html" },
+  ];
+
   return (
-    <div className="p-4 sm:p-8 max-w-3xl">
-      <div className="mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Compartir calculadora</h1>
-        <p className="text-slate-500 mt-1 text-sm">Comparte tu calculadora o incrústala directamente en tu web</p>
+    <div className="p-4 sm:p-6 max-w-3xl mx-auto">
+      <div className="mb-6 pt-2">
+        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Compartir calculadora</h1>
+        <p className="text-sm mt-0.5" style={{ color: "#4a4a4a" }}>Comparte tu calculadora o incrústala en tu web</p>
       </div>
 
       {/* URL slug */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 mb-5">
-        <h2 className="font-bold text-slate-800 mb-1">Tu URL única</h2>
-        <p className="text-xs text-slate-400 mb-4">Esta es la dirección de tu calculadora. Puedes personalizarla.</p>
+      <div className="rounded-2xl p-5 sm:p-6 mb-4" style={card}>
+        <h2 className="font-bold text-white mb-0.5">Tu URL única</h2>
+        <p className="text-xs mb-4" style={{ color: "#3a3a3a" }}>Esta es la dirección de tu calculadora. Personalízala.</p>
 
-        <div className="flex items-center gap-2 bg-slate-50 rounded-xl border border-slate-200 px-3 sm:px-4 py-3 mb-3 overflow-hidden">
-          <span className="text-xs sm:text-sm text-slate-400 flex-shrink-0 hidden sm:inline">{base}/calc/</span>
-          <span className="text-xs text-slate-400 flex-shrink-0 sm:hidden">/calc/</span>
+        <div className="flex items-center gap-2 rounded-xl px-4 py-3 mb-3 overflow-hidden" style={{ backgroundColor: "#0f0f0f", border: "1px solid #1e1e1e" }}>
+          <span className="text-xs flex-shrink-0 hidden sm:inline" style={{ color: "#3a3a3a" }}>{base}/calc/</span>
+          <span className="text-xs flex-shrink-0 sm:hidden" style={{ color: "#3a3a3a" }}>/calc/</span>
           {editandoSlug ? (
             <input
               value={slugTemp}
               onChange={(e) => setSlugTemp(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && guardarSlug()}
-              className="flex-1 bg-transparent text-sm font-semibold text-slate-800 outline-none border-b-2 border-orange-400 min-w-0"
+              className="flex-1 bg-transparent text-sm font-bold text-white outline-none min-w-0"
+              style={{ borderBottom: "1px solid #fb923c" }}
               autoFocus
             />
           ) : (
-            <span className="flex-1 text-sm font-semibold text-slate-800 truncate">{config.slug}</span>
+            <span className="flex-1 text-sm font-bold text-white truncate">{config.slug}</span>
           )}
           {editandoSlug ? (
             <div className="flex gap-2 flex-shrink-0">
-              <button onClick={guardarSlug} className="text-xs font-bold text-orange-500 hover:text-orange-600">Guardar</button>
-              <button onClick={() => { setEditandoSlug(false); setSlugTemp(config.slug); }} className="text-xs text-slate-400 hover:text-slate-600">✕</button>
+              <button onClick={guardarSlug} className="text-xs font-black hover:opacity-80" style={{ color: "#fb923c" }}>Guardar</button>
+              <button onClick={() => { setEditandoSlug(false); setSlugTemp(config.slug); }} className="text-xs" style={{ color: "#4a4a4a" }}>✕</button>
             </div>
           ) : (
-            <button onClick={() => setEditandoSlug(true)} className="text-xs font-semibold text-slate-400 hover:text-orange-500 transition-colors flex-shrink-0">Editar</button>
+            <button onClick={() => setEditandoSlug(true)} className="text-xs font-semibold hover:text-orange-400 transition-colors flex-shrink-0" style={{ color: "#4a4a4a" }}>
+              Editar
+            </button>
           )}
         </div>
 
         <div className="flex gap-2">
-          <button
-            onClick={() => copiar(urlDirecta, "url")}
-            className="flex-1 py-2.5 rounded-xl border-2 border-slate-200 text-sm font-semibold text-slate-700 hover:border-orange-300 hover:text-orange-500 transition-colors"
-          >
+          <button onClick={() => copiar(urlDirecta, "url")}
+            className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-80"
+            style={{ backgroundColor: "#1a1a1a", color: copiado === "url" ? "#34d399" : "#8a8a8a", border: "1px solid #222" }}>
             {copiado === "url" ? "✓ Copiado" : "📋 Copiar link"}
           </button>
-          <a
-            href={urlDirecta}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 py-2.5 rounded-xl border-2 border-slate-200 text-sm font-semibold text-slate-700 hover:border-orange-300 hover:text-orange-500 transition-colors text-center"
-          >
-            👁️ Abrir ↗
+          <a href={urlDirecta} target="_blank" rel="noopener noreferrer"
+            className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-80 text-center"
+            style={{ background: "linear-gradient(135deg, #fb923c, #f97316)", color: "#000" }}>
+            Abrir ↗
           </a>
         </div>
       </div>
 
-      {/* Embed iframe */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 mb-5">
-        <h2 className="font-bold text-slate-800 mb-1">Incrustar en tu web</h2>
-        <p className="text-xs text-slate-400 mb-4">Pega este código HTML donde quieras mostrar la calculadora en tu sitio web</p>
+      {/* Embed */}
+      <div className="rounded-2xl p-5 sm:p-6 mb-4" style={card}>
+        <h2 className="font-bold text-white mb-0.5">Incrustar en tu web</h2>
+        <p className="text-xs mb-4" style={{ color: "#3a3a3a" }}>Pega este código HTML en cualquier página de tu web</p>
 
-        <div className="bg-slate-900 rounded-xl p-4 mb-3 relative">
-          <pre className="text-xs text-slate-300 font-mono whitespace-pre overflow-x-auto pr-20">{iframeCode}</pre>
-          <button
-            onClick={() => copiar(iframeCode, "iframe")}
-            className="absolute top-3 right-3 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-slate-700 text-slate-300 hover:bg-orange-500 hover:text-white"
-          >
+        <div className="rounded-xl p-4 mb-3 relative" style={{ backgroundColor: "#080808", border: "1px solid #1e1e1e" }}>
+          <pre className="text-xs font-mono whitespace-pre overflow-x-auto pr-16" style={{ color: "#6a6a6a" }}>{iframeCode}</pre>
+          <button onClick={() => copiar(iframeCode, "iframe")}
+            className="absolute top-3 right-3 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+            style={{
+              backgroundColor: copiado === "iframe" ? "#34d39920" : "#1a1a1a",
+              color: copiado === "iframe" ? "#34d399" : "#6a6a6a",
+              border: "1px solid #222",
+            }}>
             {copiado === "iframe" ? "✓" : "Copiar"}
           </button>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-700">
-          💡 <strong>¿Cómo usarlo?</strong> En WordPress, Wix o cualquier CMS, añade un bloque de <strong>HTML personalizado</strong> y pega el código.
+        <div className="rounded-xl p-3 text-xs" style={{ backgroundColor: "#0f1a2e", border: "1px solid #1a3a5a" }}>
+          <span style={{ color: "#60a5fa" }}>
+            💡 En WordPress, Wix, Squarespace o Webflow: añade un bloque de <strong>HTML personalizado</strong> y pega el código.
+          </span>
         </div>
       </div>
 
-      {/* Preview iframe - oculto en móvil para no ocupar espacio */}
-      <div className="hidden sm:block bg-white rounded-2xl border border-slate-200 p-6 mb-5">
-        <h2 className="font-bold text-slate-800 mb-4">Vista previa del widget</h2>
-        <div className="rounded-xl overflow-hidden border border-slate-200" style={{ height: 500 }}>
-          <iframe
-            src={`/calc/${config.slug}`}
-            width="100%"
-            height="100%"
-            title="Preview calculadora"
-            className="border-0"
-          />
+      {/* Preview - solo desktop */}
+      <div className="hidden sm:block rounded-2xl p-6 mb-4" style={card}>
+        <h2 className="font-bold text-white mb-4">Vista previa del widget</h2>
+        <div className="rounded-2xl overflow-hidden" style={{ height: 500, border: "1px solid #1e1e1e" }}>
+          <iframe src={`/calc/${config.slug}`} width="100%" height="100%" title="Preview" className="border-0" />
         </div>
       </div>
 
-      {/* Enlace rápido en móvil en lugar del iframe */}
-      <div className="sm:hidden bg-white rounded-2xl border border-slate-200 p-5 mb-5">
-        <h2 className="font-bold text-slate-800 mb-3">Ver calculadora</h2>
+      {/* Mobile: enlace en vez de iframe */}
+      <div className="sm:hidden rounded-2xl p-5 mb-4" style={card}>
+        <h2 className="font-bold text-white mb-3">Ver calculadora</h2>
         <a href={urlDirecta} target="_blank" rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-orange-300 text-orange-500 font-semibold text-sm hover:bg-orange-50 transition-colors">
-          👁️ Abrir calculadora en nueva pestaña ↗
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold text-sm transition-all hover:opacity-80"
+          style={{ background: "linear-gradient(135deg, #fb923c22, #fb923c33)", color: "#fb923c", border: "1px solid #fb923c30" }}>
+          👁 Abrir calculadora ↗
         </a>
       </div>
 
-      {/* Instrucciones por plataforma */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6">
-        <h2 className="font-bold text-slate-800 mb-4">Cómo instalarlo en tu web</h2>
-        <div className="flex flex-col gap-3">
-          {[
-            { plataforma: "WordPress", icono: "🔵", pasos: "Edita la página → Añade bloque «HTML personalizado» → Pega el código" },
-            { plataforma: "Wix", icono: "⚫", pasos: "Editor → Añadir elementos → Embed → HTML personalizado → Pega el código" },
-            { plataforma: "Squarespace", icono: "🟤", pasos: "Editar sección → + → Embed → Pega el código" },
-            { plataforma: "Webflow", icono: "🔷", pasos: "Añade elemento «Embed» → Pega el código" },
-            { plataforma: "HTML puro", icono: "🟠", pasos: "Pega el código donde quieras mostrarlo en tu archivo .html" },
-          ].map(({ plataforma, icono, pasos }) => (
-            <div key={plataforma} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+      {/* Instrucciones */}
+      <div className="rounded-2xl p-5 sm:p-6" style={card}>
+        <h2 className="font-bold text-white mb-4">Cómo instalarlo en tu web</h2>
+        <div className="flex flex-col gap-2">
+          {plataformas.map(({ nombre, icono, pasos }) => (
+            <div key={nombre} className="flex items-start gap-3 p-3 rounded-xl" style={{ backgroundColor: "#0f0f0f", border: "1px solid #1a1a1a" }}>
               <span className="text-xl flex-shrink-0">{icono}</span>
               <div>
-                <div className="font-semibold text-slate-800 text-sm">{plataforma}</div>
-                <div className="text-xs text-slate-500 mt-0.5">{pasos}</div>
+                <div className="font-bold text-white text-sm">{nombre}</div>
+                <div className="text-xs mt-0.5" style={{ color: "#4a4a4a" }}>{pasos}</div>
               </div>
             </div>
           ))}
