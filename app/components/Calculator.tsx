@@ -7,6 +7,7 @@ import {
   calcularM2Habitaciones,
 } from "../data/services";
 import { useConfig } from "../context/ConfigContext";
+import FormularioContacto from "./FormularioContacto";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -41,6 +42,7 @@ export default function Calculator() {
     extrasIds: [],
   });
   const [desglose, setDesglose] = useState(false);
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
   const update = (patch: Partial<State>) => setState((s) => ({ ...s, ...patch }));
 
@@ -387,7 +389,11 @@ export default function Calculator() {
                   {config.contactEmail && <span>✉️ {config.contactEmail}</span>}
                 </p>
               )}
-              <button className="w-full text-white font-semibold py-3 rounded-xl transition-opacity hover:opacity-90" style={{ backgroundColor: config.colorPrimario }}>
+              <button
+                onClick={() => setMostrarFormulario(true)}
+                className="w-full text-white font-semibold py-3 rounded-xl transition-opacity hover:opacity-90"
+                style={{ backgroundColor: config.colorPrimario }}
+              >
                 Solicitar presupuesto gratuito →
               </button>
             </div>
@@ -423,5 +429,22 @@ export default function Calculator() {
         )}
       </div>
     </div>
+
+    {mostrarFormulario && state.servicio && state.zona && (
+      <FormularioContacto
+        onCerrar={() => setMostrarFormulario(false)}
+        resumenTexto={`${state.servicio.nombre} · ${state.zona.nombre}${state.servicio.unidad !== "fijo" ? ` · ${getMetros()} m²` : ""}`}
+        resumenHtml={`
+          <strong>Servicio:</strong> ${state.servicio.nombre}<br/>
+          <strong>Zona:</strong> ${state.zona.nombre}<br/>
+          ${state.servicio.unidad !== "fijo" ? `<strong>Superficie:</strong> ${getMetros()} m²<br/>` : ""}
+          ${state.extrasIds.length > 0 ? `<strong>Extras:</strong> ${state.extrasIds.join(", ")}<br/>` : ""}
+          <br/>
+          <strong>Básico:</strong> ${fmt(calcular("basico").min)} – ${fmt(calcular("basico").max)}<br/>
+          <strong>Estándar:</strong> ${fmt(calcular("estandar").min)} – ${fmt(calcular("estandar").max)}<br/>
+          <strong>Premium:</strong> ${fmt(calcular("premium").min)} – ${fmt(calcular("premium").max)}
+        `}
+      />
+    )}
   );
 }
