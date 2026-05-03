@@ -11,6 +11,7 @@ export type Fuente = "Inter" | "Poppins" | "Roboto" | "Playfair Display";
 export type CompanyConfig = {
   // Empresa
   nombre: string;
+  slug: string; // URL-friendly: reformas-garcia
   logo: string | null; // base64
   colorPrimario: string;
   fuente: Fuente;
@@ -37,8 +38,12 @@ export type CompanyConfig = {
   airtableTableName: string;
 };
 
+export const toSlug = (nombre: string) =>
+  nombre.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+
 const DEFAULT_CONFIG: CompanyConfig = {
   nombre: "Mi Empresa de Reformas",
+  slug: "mi-empresa-de-reformas",
   logo: null,
   colorPrimario: "#fb923c",
   fuente: "Inter",

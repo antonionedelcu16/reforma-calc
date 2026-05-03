@@ -8,6 +8,7 @@ const NAV = [
   { href: "/admin/servicios", label: "Servicios y precios", icono: "🔧" },
   { href: "/admin/zonas", label: "Zonas", icono: "📍" },
   { href: "/admin/apariencia", label: "Apariencia", icono: "🎨" },
+  { href: "/admin/compartir", label: "Compartir / Embed", icono: "🔗" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

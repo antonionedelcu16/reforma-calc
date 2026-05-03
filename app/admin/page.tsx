@@ -78,10 +78,10 @@ export default function AdminDashboard() {
         </div>
         <div className="flex items-center gap-2 bg-white border border-orange-200 rounded-xl px-4 py-3">
           <span className="text-sm text-slate-500 flex-1 font-mono truncate">
-            localhost:3000
+            /calc/{config.slug}
           </span>
           <button
-            onClick={() => navigator.clipboard.writeText("http://localhost:3000")}
+            onClick={() => navigator.clipboard.writeText(`${window.location.origin}/calc/${config.slug}`)}
             className="text-xs font-semibold text-orange-500 hover:text-orange-600 flex-shrink-0"
           >
             Copiar
