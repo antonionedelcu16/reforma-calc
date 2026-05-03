@@ -18,7 +18,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const [menuAbierto, setMenuAbierto] = useState(false);
 
-  const paginaActual = NAV.find((n) => n.pathname === pathname) || NAV.find((n) => pathname.startsWith(n.href) && n.href !== "/admin") || NAV[0];
+  const paginaActual = NAV.find((n) => n.href === pathname) || NAV.find((n) => pathname.startsWith(n.href) && n.href !== "/admin") || NAV[0];
 
   const SidebarContent = () => (
     <>
@@ -86,28 +86,64 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <SidebarContent />
       </aside>
 
-      {/* Mobile header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 border-b" style={{ backgroundColor: "#0a0a0a", borderColor: "#1a1a1a" }}>
-        <Link href="/admin" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center text-black text-xs font-black" style={{ backgroundColor: "#fb923c" }}>IV</div>
-          <span className="text-white font-bold text-sm">Intervisión</span>
-        </Link>
-        <button onClick={() => setMenuAbierto(!menuAbierto)} className="w-8 h-8 flex flex-col items-center justify-center gap-1.5">
-          <span className="block w-5 h-0.5 bg-white transition-all" style={{ transform: menuAbierto ? "rotate(45deg) translate(2px, 2px)" : "none" }} />
-          <span className="block h-0.5 bg-white transition-all" style={{ width: menuAbierto ? "0" : "20px", opacity: menuAbierto ? 0 : 1 }} />
-          <span className="block w-5 h-0.5 bg-white transition-all" style={{ transform: menuAbierto ? "rotate(-45deg) translate(2px, -2px)" : "none" }} />
-        </button>
+      {/* Mobile header + dropdown */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: "#0a0a0a" }}>
+        {/* Header bar */}
+        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "#1a1a1a" }}>
+          <Link href="/admin" className="flex items-center gap-2" onClick={() => setMenuAbierto(false)}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-black text-xs font-black" style={{ backgroundColor: "#fb923c" }}>IV</div>
+            <div>
+              <div className="text-white font-bold text-sm leading-none">Intervisión</div>
+              <div className="text-xs leading-none mt-0.5" style={{ color: "#4a4a4a" }}>
+                {paginaActual?.label ?? "Admin"}
+              </div>
+            </div>
+          </Link>
+          <button onClick={() => setMenuAbierto(!menuAbierto)}
+            className="w-8 h-8 flex flex-col items-center justify-center gap-1.5 rounded-lg transition-colors"
+            style={{ backgroundColor: menuAbierto ? "#1a1a1a" : "transparent" }}>
+            <span className="block w-5 h-0.5 bg-white transition-all duration-200" style={{ transform: menuAbierto ? "rotate(45deg) translate(0px, 3px)" : "none" }} />
+            <span className="block h-0.5 bg-white transition-all duration-200" style={{ width: menuAbierto ? "0" : "20px", opacity: menuAbierto ? 0 : 1 }} />
+            <span className="block w-5 h-0.5 bg-white transition-all duration-200" style={{ transform: menuAbierto ? "rotate(-45deg) translate(0px, -3px)" : "none" }} />
+          </button>
+        </div>
+
+        {/* Dropdown nav */}
+        {menuAbierto && (
+          <div className="border-b" style={{ backgroundColor: "#0d0d0d", borderColor: "#1a1a1a" }}>
+            <nav className="px-3 py-2">
+              {NAV.map(({ href, label, icono }) => {
+                const activo = pathname === href || (pathname.startsWith(href) && href !== "/admin");
+                return (
+                  <Link key={href} href={href} onClick={() => setMenuAbierto(false)}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all"
+                    style={{
+                      backgroundColor: activo ? "#1a1a1a" : "transparent",
+                      color: activo ? "#ffffff" : "#6a6a6a",
+                    }}>
+                    <span className="text-base w-5 text-center" style={{ color: activo ? "#fb923c" : "#4a4a4a" }}>{icono}</span>
+                    <span className="font-medium">{label}</span>
+                    {activo && <div className="ml-auto w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#fb923c" }} />}
+                  </Link>
+                );
+              })}
+            </nav>
+            <div className="px-3 pb-3 border-t pt-2 flex items-center justify-between" style={{ borderColor: "#1a1a1a" }}>
+              <Link href="/" target="_blank" onClick={() => setMenuAbierto(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm"
+                style={{ color: "#4a4a4a" }}>
+                <span>↗</span>
+                <span className="font-medium">Ver calculadora</span>
+              </Link>
+              <span className="text-xs font-semibold px-2 py-1 rounded-lg" style={{ color: "#fb923c", backgroundColor: "#1a1a1a" }}>Reforma Calc</span>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Mobile menu overlay */}
+      {/* Tap outside to close */}
       {menuAbierto && (
-        <div className="lg:hidden fixed inset-0 z-40 flex" onClick={() => setMenuAbierto(false)} style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <aside className="w-72 max-w-[80vw] h-full flex flex-col overflow-y-auto" style={{ backgroundColor: "#0a0a0a" }} onClick={(e) => e.stopPropagation()}>
-            <SidebarContent />
-          </aside>
-          {/* Tap area to close */}
-          <div className="flex-1" />
-        </div>
+        <div className="lg:hidden fixed inset-0 z-40" style={{ top: "0" }} onClick={() => setMenuAbierto(false)} />
       )}
 
       {/* Main */}
