@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   SERVICIOS, EXTRAS, NIVELES,
-  TipoReforma, Zona, Habitaciones,
+  TipoReforma, Habitaciones,
   calcularM2Habitaciones,
 } from "../data/services";
 import { useConfig } from "../context/ConfigContext";
@@ -14,19 +14,13 @@ type Step = 1 | 2 | 3 | 4;
 type State = {
   step: Step;
   servicio: TipoReforma | null;
-  zona: Zona | null;
+  zonaId: string | null;
   metros: string;
   habitaciones: Habitaciones;
   extrasIds: string[];
 };
 
-const DEFAULT_HABITACIONES: Habitaciones = {
-  banos: 1,
-  dormitorios: 2,
-  salon: true,
-  cocina: false,
-  pasillo: false,
-};
+const DEFAULT_HAB: Habitaciones = { banos: 1, dormitorios: 2, salon: true, cocina: false, pasillo: false };
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
@@ -34,84 +28,70 @@ const fmt = (n: number) =>
 export default function Calculator() {
   const { config } = useConfig();
   const [state, setState] = useState<State>({
-    step: 1,
-    servicio: null,
-    zona: null,
-    metros: "",
-    habitaciones: DEFAULT_HABITACIONES,
-    extrasIds: [],
+    step: 1, servicio: null, zonaId: null, metros: "", habitaciones: DEFAULT_HAB, extrasIds: [],
   });
   const [desglose, setDesglose] = useState(false);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
   const update = (patch: Partial<State>) => setState((s) => ({ ...s, ...patch }));
+  const zona = config.zonas.find((z) => z.id === state.zonaId) ?? null;
 
   const serviciosDisponibles = SERVICIOS.filter((s) => config.serviciosActivos.includes(s.id));
-  const zonasDisponibles = config.zonas;
+
   const getPrecioServicio = (s: TipoReforma, nivel: "basico" | "estandar" | "premium") => {
-    const custom = config.preciosCustom[s.id];
-    if (custom) return custom[nivel];
+    const c = config.preciosCustom[s.id];
+    if (c) return c[nivel];
     return nivel === "basico" ? s.precioBasico : nivel === "estandar" ? s.precioEstandar : s.precioPremium;
   };
-  const getPrecioExtra = (eId: string, nivel: "basico" | "estandar" | "premium") => {
-    const extra = EXTRAS.find((e) => e.id === eId)!;
-    const custom = config.preciosExtrasCustom[eId];
-    if (custom) return custom[nivel];
-    return nivel === "basico" ? extra.precioBasico : nivel === "estandar" ? extra.precioEstandar : extra.precioPremium;
+
+  const getPrecioExtra = (id: string, nivel: "basico" | "estandar" | "premium") => {
+    const e = EXTRAS.find((x) => x.id === id)!;
+    const c = config.preciosExtrasCustom[id];
+    if (c) return c[nivel];
+    return nivel === "basico" ? e.precioBasico : nivel === "estandar" ? e.precioEstandar : e.precioPremium;
   };
 
-  const getMetros = (): number => {
+  const getM2 = () => {
     if (!state.servicio) return 0;
     if (state.servicio.unidad === "habitaciones") return calcularM2Habitaciones(state.habitaciones);
     return parseFloat(state.metros) || 0;
   };
 
   const calcular = (nivelId: "basico" | "estandar" | "premium") => {
-    if (!state.servicio || !state.zona) return { base: 0, extras: 0, total: 0, min: 0, max: 0, desglosado: [] };
-
+    if (!state.servicio || !zona) return { total: 0, min: 0, max: 0, desglosado: [] };
     const s = state.servicio;
-    const precioBase = getPrecioServicio(s, nivelId);
-    const m2 = getMetros();
-    const base = s.unidad === "fijo" ? precioBase : precioBase * m2;
-    const baseConZona = base * state.zona.multiplicador;
-
-    const extrasSeleccionados = EXTRAS.filter((e) => state.extrasIds.includes(e.id) && config.extrasActivos.includes(e.id));
-    const extrasTotal = extrasSeleccionados.reduce((sum, e) => {
+    const base = s.unidad === "fijo" ? getPrecioServicio(s, nivelId) : getPrecioServicio(s, nivelId) * getM2();
+    const baseZona = base * zona.multiplicador;
+    const extrasActivos = EXTRAS.filter((e) => state.extrasIds.includes(e.id) && config.extrasActivos.includes(e.id));
+    const extrasTotal = extrasActivos.reduce((sum, e) => {
       const p = getPrecioExtra(e.id, nivelId);
-      return sum + (e.unidad === "m2" ? p * m2 : p);
+      return sum + (e.unidad === "m2" ? p * getM2() : p);
     }, 0);
-
-    const total = baseConZona + extrasTotal;
-    const nivel = NIVELES.find((n) => n.id === nivelId)!;
-
-    const desglosado = [
-      { concepto: "Mano de obra", importe: baseConZona * 0.55 },
-      { concepto: "Materiales", importe: baseConZona * 0.38 },
-      { concepto: "Gestión y varios", importe: baseConZona * 0.07 },
-      ...extrasSeleccionados.map((e) => {
-        const p = getPrecioExtra(e.id, nivelId);
-        return { concepto: e.nombre, importe: e.unidad === "m2" ? p * m2 : p };
-      }),
-    ];
-
+    const total = baseZona + extrasTotal;
+    const { variacionMin, variacionMax } = NIVELES.find((n) => n.id === nivelId)!;
     return {
-      base: baseConZona,
-      extras: extrasTotal,
       total,
-      min: Math.round(total * nivel.variacionMin),
-      max: Math.round(total * nivel.variacionMax),
-      desglosado,
+      min: Math.round(total * variacionMin),
+      max: Math.round(total * variacionMax),
+      desglosado: [
+        { concepto: "Mano de obra", importe: baseZona * 0.55 },
+        { concepto: "Materiales", importe: baseZona * 0.38 },
+        { concepto: "Gestión y varios", importe: baseZona * 0.07 },
+        ...extrasActivos.map((e) => {
+          const p = getPrecioExtra(e.id, nivelId);
+          return { concepto: e.nombre, importe: e.unidad === "m2" ? p * getM2() : p };
+        }),
+      ],
     };
   };
 
   const puedeAvanzar = () => {
     if (state.step === 1) return !!state.servicio;
-    if (state.step === 2) return !!state.zona;
+    if (state.step === 2) return !!state.zonaId;
     if (state.step === 3) {
       if (!state.servicio) return false;
       if (state.servicio.unidad === "fijo" || state.servicio.unidad === "habitaciones") return true;
-      const m = parseFloat(state.metros);
-      return m >= (state.servicio.minimoM2 || 1);
+      return parseFloat(state.metros) >= (state.servicio.minimoM2 || 1);
     }
     return true;
   };
@@ -123,328 +103,386 @@ export default function Calculator() {
   const toggleExtra = (id: string) =>
     update({ extrasIds: state.extrasIds.includes(id) ? state.extrasIds.filter((x) => x !== id) : [...state.extrasIds, id] });
 
+  const color = config.colorPrimario;
   const PASOS = ["Reforma", "Zona", "Detalles", "Resultado"];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen flex flex-col" style={{ background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)" }}>
 
-        {/* Header */}
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-slate-800 mb-1">Calculadora de Reformas</h1>
-          <p className="text-slate-500 text-sm">Obtén una estimación personalizada en segundos</p>
-        </div>
-
-        {/* Progress */}
-        <div className="flex items-center justify-between mb-6 px-2">
-          {PASOS.map((nombre, i) => {
-            const num = i + 1;
-            const activo = state.step === num;
-            const completado = state.step > num;
-            return (
-              <div key={num} className="flex items-center flex-1">
-                <div className="flex flex-col items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
-                    completado ? "bg-orange-400 text-white" : activo ? "bg-orange-400 text-white ring-4 ring-orange-100" : "bg-slate-200 text-slate-500"
-                  }`}>
-                    {completado ? "✓" : num}
-                  </div>
-                  <span className={`text-xs mt-1 font-medium ${activo ? "text-orange-500" : completado ? "text-slate-600" : "text-slate-400"}`}>
-                    {nombre}
-                  </span>
-                </div>
-                {i < PASOS.length - 1 && (
-                  <div className={`flex-1 h-0.5 mx-2 mb-4 ${state.step > num ? "bg-orange-400" : "bg-slate-200"}`} />
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Step 1: Tipo de reforma */}
-        {state.step === 1 && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <h2 className="font-semibold text-slate-700 mb-4">¿Qué quieres reformar?</h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {serviciosDisponibles.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => update({ servicio: s, extrasIds: [] })}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all text-center ${
-                    state.servicio?.id === s.id
-                      ? "border-orange-400 bg-orange-50"
-                      : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                  }`}
-                >
-                  <span className="text-2xl">{s.icono}</span>
-                  <span className="text-xs font-medium text-slate-700 leading-tight">{s.nombre}</span>
-                </button>
-              ))}
+      {/* Header */}
+      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-slate-200">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: color }}>
+              R
             </div>
+            <span className="font-bold text-slate-800 text-sm">{config.nombre}</span>
           </div>
-        )}
+          {config.contactTelefono && (
+            <a href={`tel:${config.contactTelefono}`} className="text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors">
+              📞 {config.contactTelefono}
+            </a>
+          )}
+        </div>
+      </header>
 
-        {/* Step 2: Zona */}
-        {state.step === 2 && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <h2 className="font-semibold text-slate-700 mb-1">¿En qué zona está el inmueble?</h2>
-            <p className="text-xs text-slate-400 mb-4">La ubicación influye en los precios de mano de obra y materiales</p>
-            <div className="flex flex-col gap-3">
-              {zonasDisponibles.map((z) => (
-                <button
-                  key={z.id}
-                  onClick={() => update({ zona: z })}
-                  className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
-                    state.zona?.id === z.id
-                      ? "border-orange-400 bg-orange-50"
-                      : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                  }`}
-                >
-                  <span className="font-medium text-slate-700">{z.nombre}</span>
-                  <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                    z.multiplicador > 1 ? "bg-red-100 text-red-600" :
-                    z.multiplicador < 1 ? "bg-green-100 text-green-600" :
-                    "bg-slate-100 text-slate-500"
-                  }`}>
-                    {z.multiplicador > 1 ? `+${Math.round((z.multiplicador - 1) * 100)}%` :
-                     z.multiplicador < 1 ? `-${Math.round((1 - z.multiplicador) * 100)}%` : "Precio base"}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+      <div className="flex-1 px-4 py-8">
+        <div className="max-w-2xl mx-auto">
 
-        {/* Step 3: Configuración + Extras */}
-        {state.step === 3 && state.servicio && (
-          <div className="flex flex-col gap-4">
-
-            {/* Metros o Habitaciones */}
-            {state.servicio.unidad === "m2" && (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h2 className="font-semibold text-slate-700 mb-4">¿Cuántos metros cuadrados?</h2>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="number"
-                    value={state.metros}
-                    onChange={(e) => update({ metros: e.target.value })}
-                    placeholder="Ej: 80"
-                    min={state.servicio.minimoM2 || 1}
-                    className="flex-1 text-2xl font-semibold border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-400 text-slate-800"
-                  />
-                  <span className="text-xl font-medium text-slate-400">m²</span>
-                </div>
-                {state.servicio.minimoM2 && (
-                  <p className="text-xs text-slate-400 mt-2">Mínimo {state.servicio.minimoM2} m²</p>
-                )}
+          {/* Hero — solo en paso 1 */}
+          {state.step === 1 && (
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-4 text-white" style={{ backgroundColor: color }}>
+                ✨ Estimación gratuita al instante
               </div>
-            )}
-
-            {state.servicio.unidad === "habitaciones" && (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h2 className="font-semibold text-slate-700 mb-4">¿Cómo es tu vivienda?</h2>
-                <div className="flex flex-col gap-4">
-                  {/* Baños */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-slate-700">🚿 Baños</div>
-                      <div className="text-xs text-slate-400">~6 m² por baño</div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => update({ habitaciones: { ...state.habitaciones, banos: Math.max(0, state.habitaciones.banos - 1) } })}
-                        className="w-8 h-8 rounded-full border-2 border-slate-200 font-bold text-slate-600 hover:border-orange-400 hover:text-orange-500 transition-colors">−</button>
-                      <span className="w-6 text-center font-semibold text-slate-800">{state.habitaciones.banos}</span>
-                      <button onClick={() => update({ habitaciones: { ...state.habitaciones, banos: state.habitaciones.banos + 1 } })}
-                        className="w-8 h-8 rounded-full border-2 border-slate-200 font-bold text-slate-600 hover:border-orange-400 hover:text-orange-500 transition-colors">+</button>
-                    </div>
-                  </div>
-                  {/* Dormitorios */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-slate-700">🛏️ Dormitorios</div>
-                      <div className="text-xs text-slate-400">~12 m² por dormitorio</div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => update({ habitaciones: { ...state.habitaciones, dormitorios: Math.max(0, state.habitaciones.dormitorios - 1) } })}
-                        className="w-8 h-8 rounded-full border-2 border-slate-200 font-bold text-slate-600 hover:border-orange-400 hover:text-orange-500 transition-colors">−</button>
-                      <span className="w-6 text-center font-semibold text-slate-800">{state.habitaciones.dormitorios}</span>
-                      <button onClick={() => update({ habitaciones: { ...state.habitaciones, dormitorios: state.habitaciones.dormitorios + 1 } })}
-                        className="w-8 h-8 rounded-full border-2 border-slate-200 font-bold text-slate-600 hover:border-orange-400 hover:text-orange-500 transition-colors">+</button>
-                    </div>
-                  </div>
-                  {/* Toggles */}
-                  {[
-                    { key: "salon", label: "🛋️ Salón / Comedor", m2: 28 },
-                    { key: "cocina", label: "🍳 Cocina", m2: 10 },
-                    { key: "pasillo", label: "🚪 Pasillos / Otros", m2: 8 },
-                  ].map(({ key, label, m2 }) => (
-                    <div key={key} className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium text-slate-700">{label}</div>
-                        <div className="text-xs text-slate-400">~{m2} m²</div>
-                      </div>
-                      <button
-                        onClick={() => update({ habitaciones: { ...state.habitaciones, [key]: !state.habitaciones[key as keyof Habitaciones] } })}
-                        className={`w-12 h-6 rounded-full transition-colors ${state.habitaciones[key as keyof Habitaciones] ? "bg-orange-400" : "bg-slate-200"}`}
-                      >
-                        <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform mx-0.5 ${state.habitaciones[key as keyof Habitaciones] ? "translate-x-6" : "translate-x-0"}`} />
-                      </button>
-                    </div>
-                  ))}
-                  <div className="pt-2 border-t border-slate-100 text-sm text-slate-500">
-                    Total estimado: <span className="font-semibold text-slate-700">{getMetros()} m²</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Extras */}
-            {extrasDisponibles.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h2 className="font-semibold text-slate-700 mb-1">¿Necesitas algo más? <span className="text-slate-400 font-normal">(opcional)</span></h2>
-                <p className="text-xs text-slate-400 mb-4">Selecciona los servicios adicionales que quieras incluir</p>
-                <div className="flex flex-col gap-3">
-                  {extrasDisponibles.map((e) => {
-                    const activo = state.extrasIds.includes(e.id);
-                    return (
-                      <button
-                        key={e.id}
-                        onClick={() => toggleExtra(e.id)}
-                        className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
-                          activo ? "border-orange-400 bg-orange-50" : "border-slate-200 hover:border-slate-300"
-                        }`}
-                      >
-                        <span className="text-xl">{e.icono}</span>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-slate-700">{e.nombre}</div>
-                          <div className="text-xs text-slate-400">{e.descripcion}</div>
-                        </div>
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${activo ? "bg-orange-400 border-orange-400" : "border-slate-300"}`}>
-                          {activo && <span className="text-white text-xs font-bold">✓</span>}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Step 4: Resultados */}
-        {state.step === 4 && state.servicio && state.zona && (
-          <div className="flex flex-col gap-4">
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-              <div className="flex items-center justify-between mb-1">
-                <h2 className="font-semibold text-slate-700">Estimación de presupuesto</h2>
-                <button onClick={() => setDesglose(!desglose)} className="text-xs text-orange-500 font-medium hover:underline">
-                  {desglose ? "Ocultar desglose" : "Ver desglose"}
-                </button>
-              </div>
-              <p className="text-xs text-slate-400 mb-5">
-                Para {state.servicio.nombre.toLowerCase()} · {state.zona.nombre}
-                {state.servicio.unidad !== "fijo" && ` · ${getMetros()} m²`}
+              <h1 className="text-4xl font-extrabold text-slate-900 mb-3 leading-tight">
+                ¿Cuánto cuesta<br />tu reforma?
+              </h1>
+              <p className="text-slate-500 text-base max-w-sm mx-auto">
+                Obtén una estimación personalizada en menos de 1 minuto, sin registrarte.
               </p>
+            </div>
+          )}
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                {(["basico", "estandar", "premium"] as const).map((nivelId, i) => {
-                  const nivel = NIVELES[i];
-                  const resultado = calcular(nivelId);
-                  const isMiddle = nivelId === "estandar";
-
-                  return (
-                    <div key={nivelId} className={`rounded-xl p-4 border-2 ${isMiddle ? "border-orange-400 bg-orange-50" : "border-slate-200 bg-slate-50"}`}>
-                      {isMiddle && <div className="text-xs font-semibold text-orange-500 uppercase tracking-wide mb-2">Más popular</div>}
-                      <div className="text-base font-bold text-slate-800 mb-0.5">{nivel.nombre}</div>
-                      <div className="text-xs text-slate-500 mb-3">{nivel.descripcion}</div>
-                      <div className={`text-xl font-bold ${isMiddle ? "text-orange-500" : "text-slate-700"}`}>
-                        {fmt(resultado.min)} – {fmt(resultado.max)}
+          {/* Progress */}
+          {state.step > 1 && (
+            <div className="flex items-center mb-6 px-1">
+              {PASOS.map((nombre, i) => {
+                const num = i + 1;
+                const completado = state.step > num;
+                const activo = state.step === num;
+                return (
+                  <div key={num} className="flex items-center flex-1">
+                    <div className="flex flex-col items-center">
+                      <div
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+                        style={{
+                          backgroundColor: completado || activo ? color : "#e2e8f0",
+                          color: completado || activo ? "white" : "#94a3b8",
+                          boxShadow: activo ? `0 0 0 4px ${color}30` : "none",
+                        }}
+                      >
+                        {completado ? "✓" : num}
                       </div>
-                      <div className="text-xs text-slate-400 mt-1">estimación orientativa</div>
-
-                      {desglose && (
-                        <div className="mt-3 pt-3 border-t border-slate-200 flex flex-col gap-1.5">
-                          {resultado.desglosado.map((d, idx) => (
-                            <div key={idx} className="flex justify-between text-xs">
-                              <span className="text-slate-500">{d.concepto}</span>
-                              <span className="font-medium text-slate-700">{fmt(d.importe)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      <span className="text-xs mt-1 font-medium" style={{ color: activo ? color : completado ? "#475569" : "#94a3b8" }}>
+                        {nombre}
+                      </span>
                     </div>
+                    {i < PASOS.length - 1 && (
+                      <div className="flex-1 h-0.5 mx-1.5 mb-4 rounded-full transition-colors" style={{ backgroundColor: state.step > num ? color : "#e2e8f0" }} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* PASO 1 — Tipo de reforma */}
+          {state.step === 1 && (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-6">
+              {serviciosDisponibles.map((s) => {
+                const activo = state.servicio?.id === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => update({ servicio: s, extrasIds: [] })}
+                    className="group flex flex-col items-center gap-2.5 p-4 rounded-2xl border-2 transition-all text-center bg-white"
+                    style={{
+                      borderColor: activo ? color : "#e2e8f0",
+                      backgroundColor: activo ? `${color}08` : "white",
+                      boxShadow: activo ? `0 0 0 1px ${color}40` : "0 1px 3px rgba(0,0,0,0.06)",
+                    }}
+                  >
+                    <span className="text-3xl group-hover:scale-110 transition-transform">{s.icono}</span>
+                    <span className="text-xs font-semibold leading-tight" style={{ color: activo ? color : "#475569" }}>
+                      {s.nombre}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* PASO 2 — Zona */}
+          {state.step === 2 && (
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-4" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+              <h2 className="font-bold text-slate-800 mb-1">¿En qué zona está el inmueble?</h2>
+              <p className="text-xs text-slate-400 mb-5">La ubicación influye en los costes de mano de obra y materiales</p>
+              <div className="flex flex-col gap-2.5">
+                {config.zonas.map((z) => {
+                  const activo = state.zonaId === z.id;
+                  const diff = z.multiplicador - 1;
+                  return (
+                    <button
+                      key={z.id}
+                      onClick={() => update({ zonaId: z.id })}
+                      className="flex items-center justify-between p-4 rounded-xl border-2 transition-all"
+                      style={{
+                        borderColor: activo ? color : "#e2e8f0",
+                        backgroundColor: activo ? `${color}08` : "white",
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">📍</span>
+                        <span className="font-semibold text-slate-700 text-sm">{z.nombre}</span>
+                      </div>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                        diff > 0 ? "bg-red-50 text-red-500" : diff < 0 ? "bg-green-50 text-green-600" : "bg-slate-100 text-slate-500"
+                      }`}>
+                        {diff > 0 ? `+${Math.round(diff * 100)}%` : diff < 0 ? `-${Math.round(Math.abs(diff) * 100)}%` : "Base"}
+                      </span>
+                    </button>
                   );
                 })}
               </div>
             </div>
+          )}
 
-            {/* CTA */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-              <h3 className="font-semibold text-slate-800 mb-1">¿Te interesa? Pide tu presupuesto gratuito</h3>
-              <p className="text-sm text-slate-500 mb-2">Te contactamos en menos de 24 horas con un presupuesto detallado sin compromiso.</p>
-              {(config.contactTelefono || config.contactEmail) && (
-                <p className="text-xs text-slate-400 mb-4">
-                  {config.contactTelefono && <span>📞 {config.contactTelefono}</span>}
-                  {config.contactTelefono && config.contactEmail && " · "}
-                  {config.contactEmail && <span>✉️ {config.contactEmail}</span>}
-                </p>
+          {/* PASO 3 — Detalles + Extras */}
+          {state.step === 3 && state.servicio && (
+            <div className="flex flex-col gap-4">
+              {state.servicio.unidad === "m2" && (
+                <div className="bg-white rounded-2xl border border-slate-200 p-6" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+                  <h2 className="font-bold text-slate-800 mb-5">¿Cuántos metros cuadrados?</h2>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="number"
+                      value={state.metros}
+                      onChange={(e) => update({ metros: e.target.value })}
+                      placeholder="0"
+                      min={state.servicio.minimoM2 || 1}
+                      className="flex-1 text-5xl font-extrabold text-slate-800 border-none outline-none bg-transparent w-0"
+                    />
+                    <span className="text-2xl font-bold text-slate-300">m²</span>
+                  </div>
+                  <div className="mt-3 h-1 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all" style={{ width: `${Math.min((parseFloat(state.metros) || 0) / 300 * 100, 100)}%`, backgroundColor: color }} />
+                  </div>
+                  {state.servicio.minimoM2 && <p className="text-xs text-slate-400 mt-2">Mínimo {state.servicio.minimoM2} m²</p>}
+                </div>
               )}
+
+              {state.servicio.unidad === "habitaciones" && (
+                <div className="bg-white rounded-2xl border border-slate-200 p-6" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+                  <h2 className="font-bold text-slate-800 mb-5">¿Cómo es tu vivienda?</h2>
+                  <div className="flex flex-col gap-5">
+                    {[
+                      { key: "banos", label: "Baños", emoji: "🚿", m2: 6, tipo: "contador" },
+                      { key: "dormitorios", label: "Dormitorios", emoji: "🛏️", m2: 12, tipo: "contador" },
+                    ].map(({ key, label, emoji, m2 }) => (
+                      <div key={key} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{emoji}</span>
+                          <div>
+                            <div className="font-semibold text-slate-700 text-sm">{label}</div>
+                            <div className="text-xs text-slate-400">~{m2} m² c/u</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => update({ habitaciones: { ...state.habitaciones, [key]: Math.max(0, (state.habitaciones[key as keyof Habitaciones] as number) - 1) } })}
+                            className="w-9 h-9 rounded-full border-2 border-slate-200 font-bold text-slate-600 hover:border-slate-300 transition-colors text-lg leading-none"
+                          >−</button>
+                          <span className="w-6 text-center font-bold text-slate-800 text-lg">{state.habitaciones[key as keyof Habitaciones]}</span>
+                          <button
+                            onClick={() => update({ habitaciones: { ...state.habitaciones, [key]: (state.habitaciones[key as keyof Habitaciones] as number) + 1 } })}
+                            className="w-9 h-9 rounded-full border-2 font-bold text-white transition-colors text-lg leading-none"
+                            style={{ backgroundColor: color, borderColor: color }}
+                          >+</button>
+                        </div>
+                      </div>
+                    ))}
+                    {[
+                      { key: "salon", label: "Salón / Comedor", emoji: "🛋️", m2: 28 },
+                      { key: "cocina", label: "Cocina", emoji: "🍳", m2: 10 },
+                      { key: "pasillo", label: "Pasillos / Otros", emoji: "🚪", m2: 8 },
+                    ].map(({ key, label, emoji, m2 }) => {
+                      const val = state.habitaciones[key as keyof Habitaciones] as boolean;
+                      return (
+                        <div key={key} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{emoji}</span>
+                            <div>
+                              <div className="font-semibold text-slate-700 text-sm">{label}</div>
+                              <div className="text-xs text-slate-400">~{m2} m²</div>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => update({ habitaciones: { ...state.habitaciones, [key]: !val } })}
+                            className="w-12 h-6 rounded-full transition-colors"
+                            style={{ backgroundColor: val ? color : "#e2e8f0" }}
+                          >
+                            <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform mx-0.5 ${val ? "translate-x-6" : "translate-x-0"}`} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                      <span className="text-sm text-slate-500">Superficie total estimada</span>
+                      <span className="font-bold text-slate-800">{getM2()} m²</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {extrasDisponibles.length > 0 && (
+                <div className="bg-white rounded-2xl border border-slate-200 p-6" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+                  <h2 className="font-bold text-slate-800 mb-1">¿Necesitas algo más?</h2>
+                  <p className="text-xs text-slate-400 mb-4">Servicios adicionales opcionales</p>
+                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                    {extrasDisponibles.map((e) => {
+                      const activo = state.extrasIds.includes(e.id);
+                      return (
+                        <button
+                          key={e.id}
+                          onClick={() => toggleExtra(e.id)}
+                          className="flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left"
+                          style={{
+                            borderColor: activo ? color : "#e2e8f0",
+                            backgroundColor: activo ? `${color}08` : "white",
+                          }}
+                        >
+                          <span className="text-xl">{e.icono}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-slate-700 truncate">{e.nombre}</div>
+                            <div className="text-xs text-slate-400 truncate">{e.descripcion}</div>
+                          </div>
+                          <div className="w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all"
+                            style={{ backgroundColor: activo ? color : "transparent", borderColor: activo ? color : "#cbd5e1" }}>
+                            {activo && <span className="text-white text-xs">✓</span>}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* PASO 4 — Resultados */}
+          {state.step === 4 && state.servicio && zona && (
+            <div className="flex flex-col gap-4">
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+                <div className="px-6 pt-6 pb-4 border-b border-slate-100 flex items-center justify-between">
+                  <div>
+                    <h2 className="font-bold text-slate-800">Tu estimación</h2>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {state.servicio.nombre} · {zona.nombre}
+                      {state.servicio.unidad !== "fijo" && ` · ${getM2()} m²`}
+                    </p>
+                  </div>
+                  <button onClick={() => setDesglose(!desglose)} className="text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-200 text-slate-500 hover:border-slate-300 transition-colors">
+                    {desglose ? "Ocultar desglose" : "Ver desglose"}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-3 divide-x divide-slate-100">
+                  {(["basico", "estandar", "premium"] as const).map((nivelId, i) => {
+                    const nivel = NIVELES[i];
+                    const r = calcular(nivelId);
+                    const isMiddle = nivelId === "estandar";
+                    return (
+                      <div key={nivelId} className="p-4 flex flex-col" style={{ backgroundColor: isMiddle ? `${color}06` : "white" }}>
+                        {isMiddle && (
+                          <span className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color }}>
+                            ★ Popular
+                          </span>
+                        )}
+                        <div className="font-bold text-slate-800 mb-0.5 text-sm">{nivel.nombre}</div>
+                        <div className="text-xs text-slate-400 mb-3 leading-tight">{nivel.descripcion}</div>
+                        <div className="mt-auto">
+                          <div className="text-base font-extrabold leading-tight" style={{ color: isMiddle ? color : "#1e293b" }}>
+                            {fmt(r.min)}
+                          </div>
+                          <div className="text-xs text-slate-400">— {fmt(r.max)}</div>
+                        </div>
+                        {desglose && (
+                          <div className="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-1.5">
+                            {r.desglosado.map((d, idx) => (
+                              <div key={idx} className="flex justify-between gap-1">
+                                <span className="text-xs text-slate-400 truncate">{d.concepto}</span>
+                                <span className="text-xs font-semibold text-slate-600 flex-shrink-0">{fmt(d.importe)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="px-4 pb-4">
+                  <p className="text-xs text-slate-400 text-center">Precios orientativos. El presupuesto final puede variar según el estado del inmueble.</p>
+                </div>
+              </div>
+
+              {/* CTA */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+                <div className="text-2xl mb-2">💬</div>
+                <h3 className="font-bold text-slate-800 mb-1">¿Te interesa? Es gratis y sin compromiso</h3>
+                <p className="text-sm text-slate-500 mb-4">
+                  Cuéntanos tu proyecto y te enviamos un presupuesto detallado en menos de 24h.
+                  {config.contactTelefono && <span className="block mt-1 text-xs">📞 {config.contactTelefono}</span>}
+                </p>
+                <button
+                  onClick={() => setMostrarFormulario(true)}
+                  className="w-full py-4 rounded-xl text-white font-bold text-base transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: color }}
+                >
+                  Solicitar presupuesto gratuito →
+                </button>
+              </div>
+
               <button
-                onClick={() => setMostrarFormulario(true)}
-                className="w-full text-white font-semibold py-3 rounded-xl transition-opacity hover:opacity-90"
-                style={{ backgroundColor: config.colorPrimario }}
+                onClick={() => setState({ step: 1, servicio: null, zonaId: null, metros: "", habitaciones: DEFAULT_HAB, extrasIds: [] })}
+                className="text-sm text-slate-400 hover:text-slate-600 text-center transition-colors"
               >
-                Solicitar presupuesto gratuito →
+                ← Hacer otra consulta
               </button>
             </div>
+          )}
 
-            <button onClick={() => setState({ step: 1, servicio: null, zona: null, metros: "", habitaciones: DEFAULT_HABITACIONES, extrasIds: [] })}
-              className="text-sm text-slate-400 hover:text-slate-600 text-center transition-colors">
-              ← Hacer otra consulta
-            </button>
-          </div>
-        )}
-
-        {/* Navigation */}
-        {state.step < 4 && (
-          <div className="flex justify-between mt-4">
-            {state.step > 1 ? (
-              <button onClick={() => update({ step: (state.step - 1) as Step })}
-                className="px-5 py-2.5 rounded-xl border-2 border-slate-200 text-slate-600 font-medium hover:border-slate-300 transition-colors">
-                ← Atrás
+          {/* Navegación */}
+          {state.step < 4 && (
+            <div className={`flex mt-5 ${state.step > 1 ? "justify-between" : "justify-end"}`}>
+              {state.step > 1 && (
+                <button
+                  onClick={() => update({ step: (state.step - 1) as Step })}
+                  className="px-5 py-3 rounded-xl border-2 border-slate-200 text-slate-600 font-semibold hover:border-slate-300 transition-colors"
+                >
+                  ← Atrás
+                </button>
+              )}
+              <button
+                onClick={() => puedeAvanzar() && update({ step: (state.step + 1) as Step })}
+                disabled={!puedeAvanzar()}
+                className="px-8 py-3 rounded-xl text-white font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ backgroundColor: puedeAvanzar() ? color : "#94a3b8" }}
+              >
+                {state.step === 3 ? "Ver presupuesto →" : "Siguiente →"}
               </button>
-            ) : <div />}
-            <button
-              onClick={() => puedeAvanzar() && update({ step: (state.step + 1) as Step })}
-              disabled={!puedeAvanzar()}
-              className={`px-6 py-2.5 rounded-xl font-semibold transition-colors ${
-                puedeAvanzar()
-                  ? "bg-orange-400 hover:bg-orange-500 text-white"
-                  : "bg-slate-200 text-slate-400 cursor-not-allowed"
-              }`}
-            >
-              {state.step === 3 ? "Ver presupuesto →" : "Siguiente →"}
-            </button>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
 
-    {mostrarFormulario && state.servicio && state.zona && (
-      <FormularioContacto
-        onCerrar={() => setMostrarFormulario(false)}
-        resumenTexto={`${state.servicio.nombre} · ${state.zona.nombre}${state.servicio.unidad !== "fijo" ? ` · ${getMetros()} m²` : ""}`}
-        resumenHtml={`
-          <strong>Servicio:</strong> ${state.servicio.nombre}<br/>
-          <strong>Zona:</strong> ${state.zona.nombre}<br/>
-          ${state.servicio.unidad !== "fijo" ? `<strong>Superficie:</strong> ${getMetros()} m²<br/>` : ""}
-          ${state.extrasIds.length > 0 ? `<strong>Extras:</strong> ${state.extrasIds.join(", ")}<br/>` : ""}
-          <br/>
-          <strong>Básico:</strong> ${fmt(calcular("basico").min)} – ${fmt(calcular("basico").max)}<br/>
-          <strong>Estándar:</strong> ${fmt(calcular("estandar").min)} – ${fmt(calcular("estandar").max)}<br/>
-          <strong>Premium:</strong> ${fmt(calcular("premium").min)} – ${fmt(calcular("premium").max)}
-        `}
-      />
-    )}
+      {mostrarFormulario && state.servicio && zona && (
+        <FormularioContacto
+          onCerrar={() => setMostrarFormulario(false)}
+          resumenTexto={`${state.servicio.nombre} · ${zona.nombre}${state.servicio.unidad !== "fijo" ? ` · ${getM2()} m²` : ""}`}
+          resumenHtml={`
+            <strong>Servicio:</strong> ${state.servicio.nombre}<br/>
+            <strong>Zona:</strong> ${zona.nombre}<br/>
+            ${state.servicio.unidad !== "fijo" ? `<strong>Superficie:</strong> ${getM2()} m²<br/>` : ""}
+            ${state.extrasIds.length > 0 ? `<strong>Extras:</strong> ${state.extrasIds.join(", ")}<br/>` : ""}
+            <br/>
+            <strong>Básico:</strong> ${fmt(calcular("basico").min)} – ${fmt(calcular("basico").max)}<br/>
+            <strong>Estándar:</strong> ${fmt(calcular("estandar").min)} – ${fmt(calcular("estandar").max)}<br/>
+            <strong>Premium:</strong> ${fmt(calcular("premium").min)} – ${fmt(calcular("premium").max)}
+          `}
+        />
+      )}
+    </div>
   );
 }
