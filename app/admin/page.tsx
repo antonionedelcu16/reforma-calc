@@ -1,92 +1,146 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useConfig } from "../context/ConfigContext";
 import { SERVICIOS, EXTRAS } from "../data/services";
 
 export default function AdminDashboard() {
   const { config } = useConfig();
+  const [leadsCount, setLeadsCount] = useState(0);
+
+  useEffect(() => {
+    try {
+      const leads = JSON.parse(localStorage.getItem("reforma-leads") || "[]");
+      setLeadsCount(leads.length);
+    } catch {}
+  }, []);
 
   const stats = [
-    { label: "Servicios activos", valor: config.serviciosActivos.length, total: SERVICIOS.length, href: "/admin/servicios", icono: "🔧", color: "bg-blue-50 text-blue-600" },
-    { label: "Zonas configuradas", valor: config.zonas.length, total: null, href: "/admin/zonas", icono: "📍", color: "bg-green-50 text-green-600" },
-    { label: "Extras disponibles", valor: config.extrasActivos.length, total: EXTRAS.length, href: "/admin/servicios", icono: "➕", color: "bg-purple-50 text-purple-600" },
+    { label: "Leads recibidos", valor: leadsCount, href: "/admin/leads", icono: "👥", sub: "solicitudes de presupuesto" },
+    { label: "Servicios activos", valor: config.serviciosActivos.length, total: SERVICIOS.length, href: "/admin/servicios", icono: "🔧", sub: `de ${SERVICIOS.length} disponibles` },
+    { label: "Zonas configuradas", valor: config.regionesActivas.length + config.zonas.length, href: "/admin/zonas", icono: "📍", sub: "en tu calculadora" },
+    { label: "Extras activos", valor: config.extrasActivos.length, total: EXTRAS.length, href: "/admin/servicios", icono: "➕", sub: `de ${EXTRAS.length} disponibles` },
   ];
 
-  const acciones = [
-    { href: "/admin/servicios", label: "Servicios y precios", desc: "Activa servicios y personaliza precios por nivel", icono: "🔧" },
-    { href: "/admin/zonas", label: "Zonas de trabajo", desc: "Define tus zonas y ajuste de precios", icono: "📍" },
-    { href: "/admin/apariencia", label: "Apariencia y contacto", desc: "Logo, colores, email y teléfono", icono: "🎨" },
-  ];
+  const integracionesActivas = [
+    config.contactEmail && "Email",
+    config.webhookUrl && "GoHighLevel",
+    config.whatsappNumero && "WhatsApp",
+    config.airtableToken && "Airtable",
+  ].filter(Boolean);
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-8 max-w-5xl">
+
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Bienvenido 👋</h1>
-        <p className="text-slate-500 mt-1">Configura tu calculadora y compártela con tus clientes</p>
+        <div className="flex items-center gap-3 mb-2">
+          {config.logo ? (
+            <img src={config.logo} alt={config.nombre} className="h-10 object-contain" />
+          ) : (
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg"
+              style={{ backgroundColor: config.colorPrimario }}>
+              {config.nombre.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">{config.nombre}</h1>
+            <p className="text-slate-400 text-sm">Panel de control · Reforma Calc by Intervisión</p>
+          </div>
+        </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        {stats.map(({ label, valor, total, href, icono, color }) => (
-          <Link key={label} href={href} className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:border-slate-300 transition-all group">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-4 ${color}`}>
-              {icono}
-            </div>
-            <div className="text-3xl font-extrabold text-slate-800">
-              {valor}
-              {total !== null && <span className="text-slate-300 text-xl font-normal">/{total}</span>}
-            </div>
-            <div className="text-sm text-slate-500 mt-1 flex items-center justify-between">
-              {label}
-              <span className="text-xs text-slate-300 group-hover:text-orange-400 transition-colors">→</span>
-            </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        {stats.map(({ label, valor, href, icono, sub }) => (
+          <Link key={label} href={href}
+            className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:border-slate-300 transition-all group">
+            <div className="text-2xl mb-3">{icono}</div>
+            <div className="text-3xl font-extrabold text-slate-900 mb-0.5">{valor}</div>
+            <div className="text-xs font-semibold text-slate-700">{label}</div>
+            <div className="text-xs text-slate-400 mt-0.5">{sub}</div>
+            <div className="mt-3 text-xs text-slate-300 group-hover:text-orange-400 transition-colors">Configurar →</div>
           </Link>
         ))}
       </div>
 
-      {/* Acciones */}
-      <div className="mb-8">
-        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Configuración</h2>
-        <div className="grid grid-cols-1 gap-3">
-          {acciones.map(({ href, label, desc, icono }) => (
-            <Link key={href} href={href} className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:border-orange-200 transition-all flex items-center gap-4 group">
-              <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-2xl flex-shrink-0 group-hover:bg-orange-100 transition-colors">
-                {icono}
-              </div>
-              <div className="flex-1">
-                <div className="font-semibold text-slate-800">{label}</div>
-                <div className="text-sm text-slate-400 mt-0.5">{desc}</div>
-              </div>
-              <span className="text-slate-300 group-hover:text-orange-400 transition-colors text-xl">→</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+
+        {/* Calculadora preview */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <h2 className="font-bold text-slate-800 mb-1">Tu calculadora</h2>
+          <p className="text-xs text-slate-400 mb-4">Así la ven tus clientes ahora mismo</p>
+          <div className="rounded-xl overflow-hidden border border-slate-100 mb-4" style={{ height: 220 }}>
+            <iframe src={`/calc/${config.slug}`} width="100%" height="100%" className="border-0 scale-75 origin-top-left" style={{ width: "133%", height: "133%" }} />
+          </div>
+          <div className="flex gap-2">
+            <Link href={`/calc/${config.slug}`} target="_blank"
+              className="flex-1 text-center py-2 text-xs font-semibold border border-slate-200 rounded-xl text-slate-600 hover:border-orange-300 hover:text-orange-500 transition-colors">
+              Abrir ↗
             </Link>
-          ))}
+            <Link href="/admin/compartir"
+              className="flex-1 text-center py-2 text-xs font-semibold border border-slate-200 rounded-xl text-slate-600 hover:border-orange-300 hover:text-orange-500 transition-colors">
+              Compartir / Embed
+            </Link>
+          </div>
+        </div>
+
+        {/* Integraciones + acciones */}
+        <div className="flex flex-col gap-4">
+
+          {/* Integraciones estado */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-bold text-slate-800">Integraciones</h2>
+              <Link href="/admin/integraciones" className="text-xs text-orange-500 hover:underline">Configurar</Link>
+            </div>
+            {integracionesActivas.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {integracionesActivas.map((i) => (
+                  <span key={i as string} className="text-xs px-2.5 py-1 bg-green-50 text-green-700 rounded-full font-semibold border border-green-200">
+                    ✓ {i}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400">Sin integraciones activas.</p>
+            )}
+          </div>
+
+          {/* Accesos rápidos */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-5">
+            <h2 className="font-bold text-slate-800 mb-3">Acceso rápido</h2>
+            <div className="flex flex-col gap-2">
+              {[
+                { href: "/admin/apariencia", label: "Cambiar logo o colores", icono: "🎨" },
+                { href: "/admin/zonas", label: "Gestionar zonas CCAA", icono: "📍" },
+                { href: "/admin/servicios", label: "Editar precios", icono: "🔧" },
+                { href: "/admin/leads", label: "Ver leads recibidos", icono: "👥" },
+              ].map(({ href, label, icono }) => (
+                <Link key={href} href={href}
+                  className="flex items-center gap-3 py-2 text-sm text-slate-600 hover:text-orange-500 transition-colors group">
+                  <span>{icono}</span>
+                  <span className="group-hover:underline">{label}</span>
+                  <span className="ml-auto text-slate-300 group-hover:text-orange-400">→</span>
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Link calculadora */}
-      <div className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-2xl p-6">
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <h2 className="font-bold text-slate-800">🔗 Tu link de calculadora</h2>
-            <p className="text-sm text-slate-500 mt-0.5">Comparte este enlace en tu web, WhatsApp o redes sociales</p>
-          </div>
-          <Link href="/" target="_blank" className="text-xs font-semibold text-orange-500 hover:text-orange-600 transition-colors px-3 py-1.5 bg-white rounded-lg border border-orange-200">
-            Abrir ↗
-          </Link>
+      {/* Banner Intervisión */}
+      <div className="rounded-2xl p-6 flex items-center justify-between" style={{ backgroundColor: "#0a0a0a" }}>
+        <div>
+          <div className="text-white font-bold mb-1">¿Necesitas ayuda para captar más clientes?</div>
+          <div className="text-sm" style={{ color: "#6a6a6a" }}>Intervisión · Sistema CRC para empresas de reformas</div>
         </div>
-        <div className="flex items-center gap-2 bg-white border border-orange-200 rounded-xl px-4 py-3">
-          <span className="text-sm text-slate-500 flex-1 font-mono truncate">
-            /calc/{config.slug}
-          </span>
-          <button
-            onClick={() => navigator.clipboard.writeText(`${window.location.origin}/calc/${config.slug}`)}
-            className="text-xs font-semibold text-orange-500 hover:text-orange-600 flex-shrink-0"
-          >
-            Copiar
-          </button>
-        </div>
+        <a href="https://intervision.click" target="_blank" rel="noopener noreferrer"
+          className="px-4 py-2.5 rounded-xl text-black text-sm font-bold transition-opacity hover:opacity-90 flex-shrink-0"
+          style={{ backgroundColor: "#fb923c" }}>
+          Ver más →
+        </a>
       </div>
     </div>
   );
