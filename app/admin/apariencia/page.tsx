@@ -50,20 +50,20 @@ export default function AparienciaAdmin() {
   };
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-4 sm:p-8 max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Apariencia y textos</h1>
-        <p className="text-slate-500 mt-1">Personaliza cómo ven tu calculadora tus clientes</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Apariencia y textos</h1>
+        <p className="text-slate-500 mt-1 text-sm">Personaliza cómo ven tu calculadora tus clientes</p>
       </div>
 
       <div className="flex flex-col gap-5">
 
         {/* Logo */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6">
           <h2 className="font-bold text-slate-800 mb-1">Logo de tu empresa</h2>
           <p className="text-xs text-slate-400 mb-4">Se mostrará en la cabecera de la calculadora</p>
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden bg-slate-50">
+            <div className="w-20 h-20 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden bg-slate-50 flex-shrink-0">
               {config.logo ? (
                 <img src={config.logo} alt="Logo" className="w-full h-full object-contain p-1" />
               ) : (
@@ -87,7 +87,7 @@ export default function AparienciaAdmin() {
         </div>
 
         {/* Datos empresa */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6">
           <h2 className="font-bold text-slate-800 mb-4">Datos de empresa</h2>
           <div className="flex flex-col gap-3">
             <div>
@@ -95,7 +95,7 @@ export default function AparienciaAdmin() {
               <input value={form.nombre} onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
                 className="w-full border-2 border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-orange-400" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-medium text-slate-500 block mb-1.5">Email de contacto</label>
                 <input type="email" value={form.contactEmail} onChange={(e) => setForm((f) => ({ ...f, contactEmail: e.target.value }))}
@@ -111,7 +111,7 @@ export default function AparienciaAdmin() {
         </div>
 
         {/* Textos */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6">
           <h2 className="font-bold text-slate-800 mb-4">Textos de la calculadora</h2>
           <div className="flex flex-col gap-3">
             <div>
@@ -133,7 +133,7 @@ export default function AparienciaAdmin() {
         </div>
 
         {/* Color */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6">
           <h2 className="font-bold text-slate-800 mb-1">Color principal</h2>
           <p className="text-xs text-slate-400 mb-4">Botones, selecciones y acentos</p>
           <div className="flex flex-wrap gap-3 mb-4">
@@ -144,31 +144,31 @@ export default function AparienciaAdmin() {
             ))}
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg border border-slate-200" style={{ backgroundColor: form.colorPrimario }} />
+            <div className="w-8 h-8 rounded-lg border border-slate-200 flex-shrink-0" style={{ backgroundColor: form.colorPrimario }} />
             <input value={form.colorPrimario} onChange={(e) => setForm((f) => ({ ...f, colorPrimario: e.target.value }))}
               placeholder="#fb923c" className="border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-orange-400 w-32" />
           </div>
         </div>
 
         {/* Fuente */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6">
           <h2 className="font-bold text-slate-800 mb-4">Tipografía</h2>
           <div className="grid grid-cols-2 gap-3">
             {FUENTES.map((f) => (
               <button key={f} onClick={() => setForm((prev) => ({ ...prev, fuente: f }))}
                 className={`p-3 rounded-xl border-2 text-left transition-all ${form.fuente === f ? "border-orange-400 bg-orange-50" : "border-slate-200 hover:border-slate-300"}`}>
                 <div className="text-xs text-slate-400 mb-1">Fuente</div>
-                <div className="font-semibold text-slate-800" style={{ fontFamily: f }}>{f}</div>
-                <div className="text-sm text-slate-500 mt-1" style={{ fontFamily: f }}>Reforma integral</div>
+                <div className="font-semibold text-slate-800 text-sm" style={{ fontFamily: f }}>{f}</div>
+                <div className="text-xs text-slate-500 mt-1" style={{ fontFamily: f }}>Reforma integral</div>
               </button>
             ))}
           </div>
         </div>
 
         {/* Estilo botón */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6">
           <h2 className="font-bold text-slate-800 mb-4">Estilo de botones</h2>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {BOTONES.map(({ valor, label }) => (
               <button key={valor} onClick={() => setForm((f) => ({ ...f, estiloBoton: valor }))}
                 className={`flex flex-col items-center gap-2 p-3 border-2 rounded-xl transition-all ${form.estiloBoton === valor ? "border-orange-400 bg-orange-50" : "border-slate-200 hover:border-slate-300"}`}>
@@ -182,20 +182,20 @@ export default function AparienciaAdmin() {
         </div>
 
         {/* Preview */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6">
           <h2 className="font-bold text-slate-800 mb-4">Vista previa</h2>
           <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
             <div className="flex items-center gap-2 mb-4">
               {config.logo ? (
                 <img src={config.logo} alt="Logo" className="h-8 object-contain" />
               ) : (
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: form.colorPrimario }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold flex-shrink-0" style={{ backgroundColor: form.colorPrimario }}>
                   {form.nombre.charAt(0).toUpperCase()}
                 </div>
               )}
               <span className="font-bold text-slate-800 text-sm" style={{ fontFamily: form.fuente }}>{form.nombre}</span>
             </div>
-            <h3 className="text-xl font-extrabold text-slate-900 mb-1" style={{ fontFamily: form.fuente }}>{form.tituloBienvenida}</h3>
+            <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 mb-1" style={{ fontFamily: form.fuente }}>{form.tituloBienvenida}</h3>
             <p className="text-sm text-slate-500 mb-4" style={{ fontFamily: form.fuente }}>{form.subtituloBienvenida}</p>
             <button className={`px-5 py-2.5 text-sm font-bold text-white ${form.estiloBoton}`} style={{ backgroundColor: form.colorPrimario, fontFamily: form.fuente }}>
               {form.textoCTA}

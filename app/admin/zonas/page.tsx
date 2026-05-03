@@ -52,23 +52,23 @@ export default function ZonasAdmin() {
   };
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-4 sm:p-8 max-w-3xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Zonas de trabajo</h1>
-        <p className="text-slate-500 mt-1">Define dónde operas y los precios reales de cada zona</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Zonas de trabajo</h1>
+        <p className="text-slate-500 mt-1 text-sm">Define dónde operas y los precios reales de cada zona</p>
       </div>
 
       {/* Info */}
       <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6 text-sm text-blue-700">
         <strong>Precios por comunidad autónoma:</strong> Los multiplicadores están basados en datos reales de mercado español 2024.
-        Selecciona las comunidades donde operas y aparecerán en la calculadora de tus clientes.
+        Selecciona las comunidades donde operas y aparecerán en la calculadora.
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit mb-6">
-        {([["regiones", "🗺️ Comunidades autónomas"], ["custom", "⚙️ Zonas personalizadas"]] as [Tab, string][]).map(([t, label]) => (
+      <div className="flex gap-1 bg-slate-100 p-1 rounded-xl mb-6">
+        {([["regiones", "🗺️ CCAA"], ["custom", "⚙️ Personalizadas"]] as [Tab, string][]).map(([t, label]) => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === t ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
+            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-center ${tab === t ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
             {label}
           </button>
         ))}
@@ -95,7 +95,7 @@ export default function ZonasAdmin() {
                   </button>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-400">~{r.precioRefIntegral} €/m² reforma integral</span>
+                  <span className="text-xs text-slate-400">~{r.precioRefIntegral} €/m²</span>
                   <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${cls}`}>{texto}</span>
                 </div>
               </div>
@@ -114,21 +114,21 @@ export default function ZonasAdmin() {
             return (
               <div key={z.id} className="bg-white rounded-2xl border-2 border-slate-200">
                 {!editando ? (
-                  <div className="flex items-center gap-4 p-4">
+                  <div className="flex items-center gap-3 p-4">
                     <span className="text-xl">📍</span>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="font-semibold text-slate-800">{z.nombre}</div>
                       <div className="text-xs text-slate-400">×{z.multiplicador.toFixed(2)}</div>
                     </div>
-                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${cls}`}>{texto}</span>
-                    <div className="flex gap-2">
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full flex-shrink-0 ${cls}`}>{texto}</span>
+                    <div className="flex gap-2 flex-shrink-0">
                       <button onClick={() => abrirEdicion(z)} className="text-xs px-3 py-1.5 border border-slate-200 rounded-lg text-slate-600 hover:border-orange-300 hover:text-orange-500 transition-colors">Editar</button>
-                      <button onClick={() => eliminar(z.id)} className="text-xs px-3 py-1.5 border border-slate-200 rounded-lg text-slate-600 hover:border-red-300 hover:text-red-500 transition-colors">Eliminar</button>
+                      <button onClick={() => eliminar(z.id)} className="text-xs px-3 py-1.5 border border-slate-200 rounded-lg text-slate-600 hover:border-red-300 hover:text-red-500 transition-colors">✕</button>
                     </div>
                   </div>
                 ) : (
                   <div className="p-4">
-                    <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                       <div>
                         <label className="text-xs font-medium text-slate-500 block mb-1">Nombre</label>
                         <input value={form.nombre} onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
@@ -159,7 +159,7 @@ export default function ZonasAdmin() {
           {nueva && (
             <div className="bg-white rounded-2xl border-2 border-orange-300 p-4">
               <div className="text-sm font-semibold text-slate-700 mb-3">Nueva zona</div>
-              <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div>
                   <label className="text-xs font-medium text-slate-500 block mb-1">Nombre</label>
                   <input value={formNueva.nombre} onChange={(e) => setFormNueva((f) => ({ ...f, nombre: e.target.value }))}

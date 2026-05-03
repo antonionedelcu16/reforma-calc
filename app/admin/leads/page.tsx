@@ -54,22 +54,22 @@ export default function LeadsAdmin() {
   };
 
   return (
-    <div className="p-8">
-      <div className="flex items-start justify-between mb-6">
+    <div className="p-4 sm:p-8">
+      <div className="flex items-start justify-between mb-6 gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Leads recibidos</h1>
-          <p className="text-slate-500 mt-1">{leads.length} solicitudes en total</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Leads recibidos</h1>
+          <p className="text-slate-500 mt-1 text-sm">{leads.length} solicitudes en total</p>
         </div>
         {leads.length > 0 && (
           <button onClick={exportarCSV}
-            className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-colors">
-            ⬇️ Exportar CSV
+            className="px-3 sm:px-4 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-colors flex-shrink-0">
+            ⬇️ CSV
           </button>
         )}
       </div>
 
       {leads.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200 p-16 text-center">
+        <div className="bg-white rounded-2xl border border-slate-200 p-10 sm:p-16 text-center">
           <div className="text-5xl mb-4">📭</div>
           <h3 className="font-bold text-slate-700 text-lg mb-2">Aún no hay leads</h3>
           <p className="text-slate-400 text-sm">Cuando un cliente complete el formulario de tu calculadora, aparecerá aquí.</p>
@@ -82,16 +82,16 @@ export default function LeadsAdmin() {
 
           <div className="flex flex-col gap-3">
             {leadsFiltrados.map((lead) => (
-              <div key={lead.id} className="bg-white rounded-2xl border border-slate-200 p-5 hover:border-slate-300 transition-colors">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-lg font-bold text-orange-500 flex-shrink-0">
+              <div key={lead.id} className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 hover:border-slate-300 transition-colors">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-orange-100 flex items-center justify-center text-base font-bold text-orange-500 flex-shrink-0">
                       {lead.nombre.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <div className="font-bold text-slate-800">{lead.nombre}</div>
-                      <div className="flex flex-wrap gap-3 mt-1">
-                        <a href={`mailto:${lead.email}`} className="text-xs text-slate-500 hover:text-orange-500 transition-colors">✉️ {lead.email}</a>
+                    <div className="min-w-0">
+                      <div className="font-bold text-slate-800 text-sm sm:text-base">{lead.nombre}</div>
+                      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-0.5 sm:gap-3 mt-1">
+                        <a href={`mailto:${lead.email}`} className="text-xs text-slate-500 hover:text-orange-500 transition-colors truncate max-w-[200px]">✉️ {lead.email}</a>
                         <a href={`tel:${lead.telefono}`} className="text-xs text-slate-500 hover:text-orange-500 transition-colors">📞 {lead.telefono}</a>
                       </div>
                       {lead.mensaje && <p className="text-xs text-slate-400 mt-1.5 italic">"{lead.mensaje}"</p>}
@@ -103,18 +103,18 @@ export default function LeadsAdmin() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-slate-100">
+                <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100">
                   <span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full font-medium">{lead.servicio}</span>
                   <span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full font-medium">📍 {lead.zona}</span>
                   <span className="text-xs px-2.5 py-1 bg-orange-50 text-orange-600 rounded-full font-semibold">{lead.presupuestoEstandar}</span>
                   <div className="ml-auto flex gap-2">
                     <a href={`mailto:${lead.email}?subject=Tu presupuesto de reforma&body=Hola ${lead.nombre},...`}
                       className="text-xs px-3 py-1 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors">
-                      ✉️ Responder
+                      ✉️ <span className="hidden sm:inline">Responder</span>
                     </a>
                     <a href={`tel:${lead.telefono}`}
                       className="text-xs px-3 py-1 bg-orange-400 text-white rounded-lg hover:bg-orange-500 transition-colors">
-                      📞 Llamar
+                      📞 <span className="hidden sm:inline">Llamar</span>
                     </a>
                   </div>
                 </div>

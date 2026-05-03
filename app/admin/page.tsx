@@ -31,47 +31,47 @@ export default function AdminDashboard() {
   ].filter(Boolean);
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 sm:p-8 max-w-5xl">
 
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <div className="flex items-center gap-3 mb-2">
           {config.logo ? (
             <img src={config.logo} alt={config.nombre} className="h-10 object-contain" />
           ) : (
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg"
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
               style={{ backgroundColor: config.colorPrimario }}>
               {config.nombre.charAt(0).toUpperCase()}
             </div>
           )}
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">{config.nombre}</h1>
-            <p className="text-slate-400 text-sm">Panel de control · Reforma Calc by Intervisión</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{config.nombre}</h1>
+            <p className="text-slate-400 text-xs sm:text-sm">Panel de control · Reforma Calc by Intervisión</p>
           </div>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         {stats.map(({ label, valor, href, icono, sub }) => (
           <Link key={label} href={href}
-            className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:border-slate-300 transition-all group">
-            <div className="text-2xl mb-3">{icono}</div>
-            <div className="text-3xl font-extrabold text-slate-900 mb-0.5">{valor}</div>
-            <div className="text-xs font-semibold text-slate-700">{label}</div>
-            <div className="text-xs text-slate-400 mt-0.5">{sub}</div>
-            <div className="mt-3 text-xs text-slate-300 group-hover:text-orange-400 transition-colors">Configurar →</div>
+            className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 hover:shadow-md hover:border-slate-300 transition-all group">
+            <div className="text-xl sm:text-2xl mb-2 sm:mb-3">{icono}</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-0.5">{valor}</div>
+            <div className="text-xs font-semibold text-slate-700 leading-tight">{label}</div>
+            <div className="text-xs text-slate-400 mt-0.5 leading-tight hidden sm:block">{sub}</div>
+            <div className="mt-2 sm:mt-3 text-xs text-slate-300 group-hover:text-orange-400 transition-colors">Configurar →</div>
           </Link>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-4 sm:mb-5">
 
         {/* Calculadora preview */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
           <h2 className="font-bold text-slate-800 mb-1">Tu calculadora</h2>
           <p className="text-xs text-slate-400 mb-4">Así la ven tus clientes ahora mismo</p>
-          <div className="rounded-xl overflow-hidden border border-slate-100 mb-4" style={{ height: 220 }}>
+          <div className="rounded-xl overflow-hidden border border-slate-100 mb-4" style={{ height: 200 }}>
             <iframe src={`/calc/${config.slug}`} width="100%" height="100%" className="border-0 scale-75 origin-top-left" style={{ width: "133%", height: "133%" }} />
           </div>
           <div className="flex gap-2">
@@ -90,7 +90,7 @@ export default function AdminDashboard() {
         <div className="flex flex-col gap-4">
 
           {/* Integraciones estado */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-bold text-slate-800">Integraciones</h2>
               <Link href="/admin/integraciones" className="text-xs text-orange-500 hover:underline">Configurar</Link>
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Accesos rápidos */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
             <h2 className="font-bold text-slate-800 mb-3">Acceso rápido</h2>
             <div className="flex flex-col gap-2">
               {[
@@ -131,13 +131,13 @@ export default function AdminDashboard() {
       </div>
 
       {/* Banner Intervisión */}
-      <div className="rounded-2xl p-6 flex items-center justify-between" style={{ backgroundColor: "#0a0a0a" }}>
+      <div className="rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-0 sm:justify-between" style={{ backgroundColor: "#0a0a0a" }}>
         <div>
           <div className="text-white font-bold mb-1">¿Necesitas ayuda para captar más clientes?</div>
           <div className="text-sm" style={{ color: "#6a6a6a" }}>Intervisión · Sistema CRC para empresas de reformas</div>
         </div>
         <a href="https://intervision.click" target="_blank" rel="noopener noreferrer"
-          className="px-4 py-2.5 rounded-xl text-black text-sm font-bold transition-opacity hover:opacity-90 flex-shrink-0"
+          className="px-4 py-2.5 rounded-xl text-black text-sm font-bold transition-opacity hover:opacity-90 flex-shrink-0 self-start sm:self-auto"
           style={{ backgroundColor: "#fb923c" }}>
           Ver más →
         </a>
