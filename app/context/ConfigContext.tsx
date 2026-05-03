@@ -5,28 +5,60 @@ import { SERVICIOS, ZONAS_DEFAULT, EXTRAS, Zona } from "../data/services";
 
 export type PreciosCustom = Record<string, { basico: number; estandar: number; premium: number }>;
 
+export type EstiloBoton = "rounded-full" | "rounded-xl" | "rounded-lg" | "rounded-md";
+export type Fuente = "Inter" | "Poppins" | "Roboto" | "Playfair Display";
+
 export type CompanyConfig = {
+  // Empresa
   nombre: string;
+  logo: string | null; // base64
   colorPrimario: string;
+  fuente: Fuente;
+  estiloBoton: EstiloBoton;
   contactEmail: string;
   contactTelefono: string;
+  // Textos personalizables
+  tituloBienvenida: string;
+  subtituloBienvenida: string;
+  textoCTA: string;
+  // Servicios
   serviciosActivos: string[];
   preciosCustom: PreciosCustom;
-  zonas: Zona[];
+  // Zonas: regiones españolas activas + zonas custom
+  regionesActivas: string[]; // IDs de COMUNIDADES
+  zonas: Zona[]; // zonas custom adicionales
   extrasActivos: string[];
   preciosExtrasCustom: PreciosCustom;
+  // Integraciones (Bloque 3)
+  webhookUrl: string;
+  whatsappNumero: string;
+  airtableToken: string;
+  airtableBaseId: string;
+  airtableTableName: string;
 };
 
 const DEFAULT_CONFIG: CompanyConfig = {
   nombre: "Mi Empresa de Reformas",
+  logo: null,
   colorPrimario: "#fb923c",
+  fuente: "Inter",
+  estiloBoton: "rounded-xl",
   contactEmail: "info@miempresa.com",
   contactTelefono: "600 000 000",
+  tituloBienvenida: "¿Cuánto cuesta tu reforma?",
+  subtituloBienvenida: "Obtén una estimación personalizada en menos de 1 minuto, sin registrarte.",
+  textoCTA: "Solicitar presupuesto gratuito →",
   serviciosActivos: SERVICIOS.map((s) => s.id),
   preciosCustom: {},
+  regionesActivas: ["madrid", "barcelona", "andalucia", "valencia"],
   zonas: ZONAS_DEFAULT,
   extrasActivos: EXTRAS.map((e) => e.id),
   preciosExtrasCustom: {},
+  webhookUrl: "",
+  whatsappNumero: "",
+  airtableToken: "",
+  airtableBaseId: "",
+  airtableTableName: "Leads",
 };
 
 type ConfigContextType = {

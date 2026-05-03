@@ -8,6 +8,7 @@ import {
 } from "../data/services";
 import { useConfig } from "../context/ConfigContext";
 import FormularioContacto from "./FormularioContacto";
+import { COMUNIDADES } from "../data/regiones";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -34,7 +35,15 @@ export default function Calculator() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
   const update = (patch: Partial<State>) => setState((s) => ({ ...s, ...patch }));
-  const zona = config.zonas.find((z) => z.id === state.zonaId) ?? null;
+
+  // Combina regiones CCAA activas + zonas custom
+  const zonasDisponibles = [
+    ...COMUNIDADES.filter((r) => config.regionesActivas.includes(r.id)).map((r) => ({
+      id: r.id, nombre: `${r.emoji} ${r.nombre}`, multiplicador: r.multiplicador,
+    })),
+    ...config.zonas,
+  ];
+  const zona = zonasDisponibles.find((z) => z.id === state.zonaId) ?? null;
 
   const serviciosDisponibles = SERVICIOS.filter((s) => config.serviciosActivos.includes(s.id));
 
@@ -104,19 +113,24 @@ export default function Calculator() {
     update({ extrasIds: state.extrasIds.includes(id) ? state.extrasIds.filter((x) => x !== id) : [...state.extrasIds, id] });
 
   const color = config.colorPrimario;
+  const fuente = config.fuente;
   const PASOS = ["Reforma", "Zona", "Detalles", "Resultado"];
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)", fontFamily: fuente }}>
 
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-slate-200">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: color }}>
-              R
-            </div>
-            <span className="font-bold text-slate-800 text-sm">{config.nombre}</span>
+            {config.logo ? (
+              <img src={config.logo} alt={config.nombre} className="h-8 object-contain" />
+            ) : (
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: color }}>
+                {config.nombre.charAt(0).toUpperCase()}
+              </div>
+            )}
+            {!config.logo && <span className="font-bold text-slate-800 text-sm">{config.nombre}</span>}
           </div>
           {config.contactTelefono && (
             <a href={`tel:${config.contactTelefono}`} className="text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors">
@@ -136,10 +150,10 @@ export default function Calculator() {
                 ✨ Estimación gratuita al instante
               </div>
               <h1 className="text-4xl font-extrabold text-slate-900 mb-3 leading-tight">
-                ¿Cuánto cuesta<br />tu reforma?
+                {config.tituloBienvenida}
               </h1>
               <p className="text-slate-500 text-base max-w-sm mx-auto">
-                Obtén una estimación personalizada en menos de 1 minuto, sin registrarte.
+                {config.subtituloBienvenida}
               </p>
             </div>
           )}
@@ -209,7 +223,7 @@ export default function Calculator() {
               <h2 className="font-bold text-slate-800 mb-1">¿En qué zona está el inmueble?</h2>
               <p className="text-xs text-slate-400 mb-5">La ubicación influye en los costes de mano de obra y materiales</p>
               <div className="flex flex-col gap-2.5">
-                {config.zonas.map((z) => {
+                {zonasDisponibles.map((z) => {
                   const activo = state.zonaId === z.id;
                   const diff = z.multiplicador - 1;
                   return (
@@ -222,14 +236,11 @@ export default function Calculator() {
                         backgroundColor: activo ? `${color}08` : "white",
                       }}
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg">📍</span>
-                        <span className="font-semibold text-slate-700 text-sm">{z.nombre}</span>
-                      </div>
+                      <span className="font-semibold text-slate-700 text-sm">{z.nombre}</span>
                       <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                        diff > 0 ? "bg-red-50 text-red-500" : diff < 0 ? "bg-green-50 text-green-600" : "bg-slate-100 text-slate-500"
+                        diff > 0.01 ? "bg-red-50 text-red-500" : diff < -0.01 ? "bg-green-50 text-green-600" : "bg-slate-100 text-slate-500"
                       }`}>
-                        {diff > 0 ? `+${Math.round(diff * 100)}%` : diff < 0 ? `-${Math.round(Math.abs(diff) * 100)}%` : "Base"}
+                        {diff > 0.01 ? `+${Math.round(diff * 100)}%` : diff < -0.01 ? `-${Math.round(Math.abs(diff) * 100)}%` : "Base"}
                       </span>
                     </button>
                   );
@@ -427,11 +438,19 @@ export default function Calculator() {
                 </p>
                 <button
                   onClick={() => setMostrarFormulario(true)}
-                  className="w-full py-4 rounded-xl text-white font-bold text-base transition-opacity hover:opacity-90"
+                  className={`w-full py-4 text-white font-bold text-base transition-opacity hover:opacity-90 ${config.estiloBoton}`}
                   style={{ backgroundColor: color }}
                 >
-                  Solicitar presupuesto gratuito →
+                  {config.textoCTA}
                 </button>
+              </div>
+
+              {/* Powered by */}
+              <div className="text-center">
+                <a href="https://intervision.click" target="_blank" rel="noopener noreferrer"
+                  className="text-xs text-slate-300 hover:text-slate-400 transition-colors">
+                  Calculadora powered by <span className="font-semibold">Intervisión</span>
+                </a>
               </div>
 
               <button
@@ -449,7 +468,7 @@ export default function Calculator() {
               {state.step > 1 && (
                 <button
                   onClick={() => update({ step: (state.step - 1) as Step })}
-                  className="px-5 py-3 rounded-xl border-2 border-slate-200 text-slate-600 font-semibold hover:border-slate-300 transition-colors"
+                  className={`px-5 py-3 border-2 border-slate-200 text-slate-600 font-semibold hover:border-slate-300 transition-colors ${config.estiloBoton}`}
                 >
                   ← Atrás
                 </button>
@@ -457,7 +476,7 @@ export default function Calculator() {
               <button
                 onClick={() => puedeAvanzar() && update({ step: (state.step + 1) as Step })}
                 disabled={!puedeAvanzar()}
-                className="px-8 py-3 rounded-xl text-white font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className={`px-8 py-3 text-white font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed ${config.estiloBoton}`}
                 style={{ backgroundColor: puedeAvanzar() ? color : "#94a3b8" }}
               >
                 {state.step === 3 ? "Ver presupuesto →" : "Siguiente →"}
