@@ -101,10 +101,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Mobile menu overlay */}
       {menuAbierto && (
-        <div className="lg:hidden fixed inset-0 z-40" onClick={() => setMenuAbierto(false)} style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <aside className="w-64 h-full flex flex-col" style={{ backgroundColor: "#0a0a0a" }} onClick={(e) => e.stopPropagation()}>
+        <div className="lg:hidden fixed inset-0 z-40 flex" onClick={() => setMenuAbierto(false)} style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <aside className="w-72 max-w-[80vw] h-full flex flex-col overflow-y-auto" style={{ backgroundColor: "#0a0a0a" }} onClick={(e) => e.stopPropagation()}>
             <SidebarContent />
           </aside>
+          {/* Tap area to close */}
+          <div className="flex-1" />
         </div>
       )}
 
