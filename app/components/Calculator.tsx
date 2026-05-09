@@ -27,7 +27,7 @@ const fmt = (n: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
 
 export default function Calculator() {
-  const { config } = useConfig();
+  const { config, currentCalcId } = useConfig();
   const [state, setState] = useState<State>({
     step: 1, servicio: null, zonaId: null, metros: "", habitaciones: DEFAULT_HAB, extrasIds: [],
   });
@@ -501,6 +501,7 @@ export default function Calculator() {
             ${state.servicio.unidad !== "fijo" ? `<strong>Superficie:</strong> ${getM2()} m²<br/>` : ""}
             ${state.extrasIds.length > 0 ? `<strong>Extras:</strong> ${state.extrasIds.join(", ")}<br/>` : ""}
           `}
+          calcId={currentCalcId ?? undefined}
         />
       )}
     </div>

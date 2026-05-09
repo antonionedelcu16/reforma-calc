@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { NextRequest, NextResponse } from "next/server";
+import { createServiceClient } from "../../../lib/supabase/server";
 
 type LeadPayload = {
   nombre: string;
@@ -21,6 +22,8 @@ type LeadPayload = {
   airtableToken?: string;
   airtableBaseId?: string;
   airtableTableName?: string;
+  // Multi-tenant
+  calcId?: string;
 };
 
 async function enviarEmail(data: LeadPayload) {
@@ -185,6 +188,37 @@ export async function POST(req: NextRequest) {
     } catch (e) {
       console.error("Airtable error:", e);
       resultados.airtable = "error";
+    }
+  }
+
+  // Supabase lead storage
+  if (body.calcId) {
+    try {
+      const supabase = createServiceClient();
+      const { data: calc } = await supabase
+        .from("calculators")
+        .select("user_id")
+        .eq("id", body.calcId)
+        .single();
+      if (calc) {
+        await supabase.from("leads").insert({
+          calculator_id: body.calcId,
+          user_id: calc.user_id,
+          nombre: body.nombre,
+          email: body.email,
+          telefono: body.telefono,
+          servicio: body.servicio,
+          zona: body.zona,
+          presupuesto_basico: body.presupuestoBasico,
+          presupuesto_estandar: body.presupuestoEstandar,
+          presupuesto_premium: body.presupuestoPremium,
+          mensaje: body.mensaje || null,
+        });
+      }
+      resultados.supabase = "ok";
+    } catch (e) {
+      console.error("Supabase lead error:", e);
+      resultados.supabase = "error";
     }
   }
 

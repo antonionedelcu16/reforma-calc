@@ -12,19 +12,13 @@ type Props = {
   presupuestoBasico: string;
   presupuestoEstandar: string;
   presupuestoPremium: string;
+  calcId?: string;
 };
-
-function guardarLeadLocal(lead: object) {
-  try {
-    const leads = JSON.parse(localStorage.getItem("reforma-leads") || "[]");
-    leads.unshift({ ...lead, fecha: new Date().toISOString(), id: Date.now() });
-    localStorage.setItem("reforma-leads", JSON.stringify(leads.slice(0, 500)));
-  } catch {}
-}
 
 export default function FormularioContacto({
   onCerrar, resumenHtml, resumenTexto,
   servicio, zona, presupuestoBasico, presupuestoEstandar, presupuestoPremium,
+  calcId,
 }: Props) {
   const { config } = useConfig();
   const [form, setForm] = useState({ nombre: "", email: "", telefono: "", mensaje: "" });
@@ -53,6 +47,7 @@ export default function FormularioContacto({
         airtableToken: config.airtableToken,
         airtableBaseId: config.airtableBaseId,
         airtableTableName: config.airtableTableName,
+        ...(calcId && { calcId }),
       };
 
       const res = await fetch("/api/contacto", {
@@ -62,7 +57,6 @@ export default function FormularioContacto({
       });
 
       if (res.ok) {
-        guardarLeadLocal({ nombre: form.nombre, email: form.email, telefono: form.telefono, mensaje: form.mensaje, servicio, zona, presupuestoEstandar });
         setEstado("ok");
       } else {
         setEstado("error");
